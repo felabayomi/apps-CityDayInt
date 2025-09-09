@@ -1,0 +1,33 @@
+{
+  "name": "Daily Felix - City of the Day",
+  "short_name": "Daily Felix",
+  "description": "Discover one curated city daily with travel insights and inspiration",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["travel", "lifestyle", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}

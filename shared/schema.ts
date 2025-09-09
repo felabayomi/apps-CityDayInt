@@ -43,8 +43,10 @@ export const users = pgTable("users", {
 // Cities table
 export const cities = pgTable("cities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: varchar("slug").unique(),
   name: varchar("name").notNull(),
   country: varchar("country").notNull(),
+  region: varchar("region"), // Europe, Asia, Americas, etc.
   flag: varchar("flag"),
   publishDate: timestamp("publish_date").notNull(),
   status: varchar("status").notNull().default('draft'), // draft, published, scheduled
@@ -52,6 +54,10 @@ export const cities = pgTable("cities", {
   saves: integer("saves").default(0),
   shares: integer("shares").default(0),
   revenue: decimal("revenue", { precision: 10, scale: 2 }).default('0.00'),
+  funFact: text("fun_fact"),
+  tags: text("tags").array(),
+  deepDiveMarkdown: text("deep_dive_markdown"), // Premium content
+  miniItineraryMd: text("mini_itinerary_md"), // Premium content
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

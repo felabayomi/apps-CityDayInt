@@ -1,0 +1,362 @@
+Project: Daily Felix — City of the Day
+
+
+
+
+
+
+
+One-liner
+
+
+
+
+
+A PWA that delivers one curated City of the Day with bite-sized cards (morning/afternoon/evening), gamified “postcards,” and optional premium deep-dives + affiliate deals. Self-running, low-touch, built for daily habit.
+
+
+
+
+
+Goals (MVP)
+
+
+
+
+
+Users get a new city every day with 3 quick cards:
+Morning: landmark + 1-paragraph intro
+Afternoon: food/culture tip
+Evening: budget tip + fun fact
+
+Users can save/collect cities (postcards), see streaks, and share.
+Admin can create or AI-generate the daily city, schedule it, and attach affiliate links.
+Premium ($7/mo) unlocks deep dive (2–5 min read), downloadable mini-itinerary, and deal widgets.
+PWA: installable, offline for recent cities.
+
+
+
+
+
+
+Tech Preferences
+
+
+
+
+
+Frontend: React (Next.js or Vite) + Tailwind
+Backend: Node/Express (or Next API routes)
+DB: Supabase (auth, Postgres, storage)
+Payments: Stripe (monthly subscription)
+Notifications: Web Push (OneSignal or native web push), email (Resend/Mailgun)
+PWA: manifest + service worker (cache last 14 days)
+AI: OpenAI API hooks (can stub with placeholders)
+
+
+
+
+
+
+Core Pages
+
+
+
+
+
+Home / Today
+
+
+
+
+
+
+Header: logo, “City of the Day,” date, user menu.
+Three swipeable cards:
+Morning Card → landmark image, 1-para “Why it matters”
+Afternoon Card → food/culture; 1 local dish + where to try
+Evening Card → budget tip + “Did you know?” fact
+
+Buttons: Save postcard ⭐, Share, “Deep Dive” (premium)
+Deal slot (premium): “Book tours in {City}” (affiliate button)
+
+
+
+
+
+
+Library (Postcards)
+
+
+
+
+
+
+Grid of saved cities with mini thumbnails.
+Filters: continent, country, tags (foodie, history, outdoors).
+Badge progress: “Europe Explorer,” “10 Capitals,” streak count.
+
+
+
+
+
+
+Deep Dive (Premium)
+
+
+
+
+
+
+2–5 min city brief: brief history, top 5 sights, neighborhood tip, 24h itinerary, “3 under $25” ideas.
+Affiliate blocks: Hotels, tours, city passes.
+Download: PDF mini-itinerary (generate from content).
+
+
+
+
+
+
+Onboarding / Profile
+
+
+
+
+
+
+Quick preference toggles: regions of interest, budget range, travel style.
+Notification opt-in: morning/midday/evening.
+
+
+
+
+
+
+Admin
+
+
+
+
+
+
+Create/edit city entry.
+“AI Generate” button (fields auto-filled).
+Schedule date (UTC).
+Add affiliate links (label + URL).
+Publish/unpublish; preview.
+
+
+
+
+
+
+Data Model (Supabase)
+
+
+
+
+
+tables
+
+
+
+cities
+id (uuid), slug, name, country, region
+date_published (date, unique)
+morning_title, morning_text, morning_image_url
+afternoon_title, afternoon_text, afternoon_image_url
+evening_title, evening_text, evening_image_url
+fun_fact, tags (text[])
+deep_dive_markdown (premium), mini_itinerary_md (premium)
+affiliate_links (jsonb: [{label, url, type}])
+status (‘draft’ | ‘scheduled’ | ‘published’)
+created_at, updated_at
+
+user_postcards
+id, user_id, city_id, saved_at
+
+user_profiles
+user_id, preferences_json (regions[], styles[], budget), streak_count, last_seen_date
+
+subscriptions
+user_id, stripe_customer_id, stripe_status, current_period_end
+
+
+
+
+
+indexes
+
+
+
+unique on cities.date_published
+index on user_postcards.user_id
+
+
+
+
+
+
+API Endpoints
+
+
+
+
+
+GET /api/today → returns today’s published city (or next scheduled if preview for admin)
+GET /api/city/:slug → public city content (premium fields gated)
+POST /api/save (auth) → save postcard
+GET /api/library (auth) → user’s saved cities
+POST /api/admin/city (admin) → create/update/schedule
+POST /api/admin/ai-generate (admin) → fill fields from {city, country, tone}
+POST /api/subscribe → Stripe checkout link
+Webhooks: /api/stripe/webhook to update subscriptions
+
+
+
+
+
+
+PWA
+
+
+
+
+
+manifest.json (name, icons, theme)
+Service worker caches shell + last 14 cities
+Offline shows last available “City of the Day” + Library
+
+
+
+
+
+
+Notifications
+
+
+
+
+
+Three optional daily pushes (user-controlled):
+8am local → “Wake up in {City}”
+12pm → “Taste of {City}: {Dish}”
+7pm → “Tonight’s Tip: {BudgetTip}”
+
+Email: daily digest option (1 email/day with all 3 cards)
+
+
+
+
+
+
+Monetization
+
+
+
+
+
+Free: Today cards + save postcards
+Premium ($7/mo): deep dive, itineraries, PDF download, deal widgets, browse archive beyond last 14 days
+Affiliate: show 1–2 relevant deals per city (clearly labeled)
+
+
+
+
+
+
+Gamification
+
+
+
+
+
+Streaks: consecutive days viewed
+Badges: 10/25/50 cities; continent completions; theme badges
+Progress: “You’ve explored 32 cities • 4 continents”
+
+
+
+
+
+
+Admin AI Prompts (Examples)
+
+
+
+
+
+Generate morning card (landmark intro)
+Generate afternoon card (food/culture + where to try)
+Generate evening card (budget tip + fun fact)
+Generate deep dive (structure: history 3-4 sentences, top 5, 24h itinerary, 3 under $25)
+Tone: warm, human, travel-mag vibe; 120–180 words per card
+
+
+
+
+
+
+Sample City JSON (seed)
+
+
+
+{
+
+  "name": "Lisbon",
+
+  "country": "Portugal",
+
+  "region": "Europe",
+
+  "date_published": "2025-09-10",
+
+  "morning_title": "Belém Tower at Sunrise",
+
+  "morning_text": "Welcome to Lisbon—one of Western Europe’s oldest cities. Start at the Tagus where Belém Tower watched explorers depart. Climb for river views and tilework that hint at Portugal’s Age of Discovery.",
+
+  "morning_image_url": "https://images.example/belen.jpg",
+
+  "afternoon_title": "Pastel de Nata & Alfama",
+
+  "afternoon_text": "Grab a warm pastel de nata and espresso, then wander Alfama’s lanes as fado music drifts from doorways. Duck into a miradouro for city-wide views and orange rooftops.",
+
+  "afternoon_image_url": "https://images.example/alfama.jpg",
+
+  "evening_title": "Tram 28 & Budget Tip",
+
+  "evening_text": "Ride Tram 28 for a city tour on the cheap. Budget tip: get a 24-hour transit pass to hop on/off trams and elevadores; it beats single tickets.",
+
+  "evening_image_url": "https://images.example/tram28.jpg",
+
+  "fun_fact": "Lisbon predates Rome and is one of Europe’s sunniest capitals.",
+
+  "tags": ["history","food","views"],
+
+  "deep_dive_markdown": "## Lisbon Deep Dive\n**Top 5**: Belém Tower, Jerónimos, Alfama, LX Factory, Time Out Market.\n**24h**: Morning Belém, midday Time Out Market, sunset Miradouro da Senhora do Monte, fado in Alfama.\n**Under $25**: transit pass, pastel de nata crawl, azulejo museum.",
+
+  "mini_itinerary_md": "### 24 Hours in Lisbon\n- Morning: Belém\n- Afternoon: Alfama & Tram 28\n- Evening: Fado + viewpoint",
+
+  "affiliate_links": [
+
+    {"label":"Book a walking tour", "url":"https://getyourguide.com/lisbon", "type":"tour"},
+
+    {"label":"Find hotels", "url":"https://booking.com/city/pt/lisbon", "type":"hotel"}
+
+  ],
+
+  "status": "published"
+
+}
+
+
+
+UI Copy (ready to use)
+
+
+
+
+
+Hero: “City of the Day — Explore the world, one day at a time.”
+Buttons: “Save Postcard” • “Deep Dive (Premium)” • “Book This City”
+Empty state (Library): “Your passport is blank. Save today’s city to start your collection.”

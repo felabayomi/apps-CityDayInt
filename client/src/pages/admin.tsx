@@ -60,12 +60,12 @@ export default function Admin() {
   }, [user, toast]);
 
   // Stats queries
-  const { data: cities = [] } = useQuery({
+  const { data: cities = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/cities'],
     enabled: !!user?.email?.includes('admin'),
   });
 
-  const { data: analytics = [] } = useQuery({
+  const { data: analytics = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/analytics/cities'], 
     enabled: !!user?.email?.includes('admin'),
   });

@@ -24,7 +24,11 @@ function Router() {
         </div>
       ) : (
         <>
-          <Route path="/" component={!isAuthenticated ? Landing : Home} />
+          {!isAuthenticated ? (
+            <Route path="/" component={Landing} />
+          ) : (
+            <Route path="/" component={Home} />
+          )}
           {isAuthenticated && <Route path="/library" component={Library} />}
           {isAuthenticated && <Route path="/admin" component={Admin} />}
           {isAuthenticated && <Route path="/analytics" component={Analytics} />}

@@ -89,7 +89,7 @@ export default function Landing() {
               <p className="mt-4 text-muted-foreground">Loading today's city...</p>
             </div>
           ) : todaysCity ? (
-            <CityCards city={todaysCity} />
+            <CityCards city={todaysCity} savedCityIds={new Set()} onSaveToggle={() => {}} />
           ) : (
             <div className="text-center py-12">
               <Globe className="mx-auto h-12 w-12 text-muted-foreground mb-4" />

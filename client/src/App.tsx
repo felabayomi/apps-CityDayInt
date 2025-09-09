@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
+import Library from "@/pages/library";
 import Admin from "@/pages/admin";
 import Analytics from "@/pages/analytics";
 import NotFound from "@/pages/not-found";
@@ -22,6 +23,7 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Home} />
+          <Route path="/library" component={Library} />
           <Route path="/admin" component={Admin} />
           <Route path="/analytics" component={Analytics} />
         </>

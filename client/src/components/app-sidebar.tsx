@@ -25,7 +25,7 @@ const navigation = [
   },
   {
     title: "Saved Cities",
-    url: "/saved",
+    url: "/library",
     icon: Heart,
   },
   {

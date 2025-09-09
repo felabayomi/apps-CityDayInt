@@ -1,0 +1,92 @@
+Ahhh 👌 this is brilliant — City of the Day becomes the travel twin of your Daily Felix Word of the Day.
+
+Here’s a full concept draft mirroring your Word of Day framework, but adapted for City Discovery:
+
+⸻
+
+🌍 Daily Felix – City of the Day
+
+A digital travel companion delivering AI-curated inspiration from one city every day.
+
+⸻
+
+🔑 Core Idea
+
+Each day, users discover a new city with highlights, culture, and travel insights — turning daily micro-learning into wanderlust and trip-planning fuel.
+
+⸻
+
+📌 Key Features
+
+1. Daily City Content (AI-powered)
+	•	Featured city of the day (rotates across U.S. and world).
+	•	Highlights: history, top 3 attractions, local food to try, best budget tip.
+	•	Bonus: “Did you know?” quirky fact or cultural insight.
+
+2. Customer Dashboard (interactive cards)
+	•	Morning: “Wake up in…” city intro + main landmark.
+	•	Afternoon: Food + cultural tip.
+	•	Evening: Budget tip + local tradition.
+	•	Travel inspiration cards are swipeable and quick to consume.
+
+3. Admin Panel
+	•	You (admin) can pick a city manually or let AI auto-generate.
+	•	AI generates summaries (history, attractions, food, tips).
+	•	Option to “pin” special cities (tie-in promotions, affiliates, seasonal).
+
+4. Smart Notifications
+	•	Up to 3 reminders daily (not as heavy as 18):
+	•	Morning → Today’s City
+	•	Midday → Fun Fact or Food
+	•	Evening → Travel Tip
+
+5. PWA Ready
+	•	Works offline → users can “collect” daily cities like digital postcards.
+	•	Installable app on mobile & desktop.
+
+6. User Authentication
+	•	Free tier: basic daily city card.
+	•	Premium tier ($5–7/month): unlocks deep dive content (detailed itineraries, affiliate links, deals for that city).
+
+⸻
+
+🎯 Use Cases
+	•	Travel Enthusiasts: Daily wanderlust hit.
+	•	Families: Educational tool to teach kids about world cities.
+	•	Travel Planners: Build a “bucket list” over time.
+	•	Affiliate Tie-in: Each city card can have “Book Hotels/Experiences in [City]” link → monetization.
+
+⸻
+
+💡 Example Day Flow (City: Lisbon)
+	•	Morning Card: “Good morning! Today’s city is Lisbon 🇵🇹. Explore the iconic Belém Tower, a UNESCO site by the Tagus River.”
+	•	Afternoon Card: “Try Lisbon’s sweet treat — Pastel de Nata. Locals eat it with coffee in the afternoon.”
+	•	Evening Card: “Budget tip: Buy a 24-hour tram pass for $7 instead of single tickets.”
+	•	Fun Fact: “Did you know? Lisbon is older than Rome and one of the oldest cities in Western Europe.”
+	•	Affiliate Button: “👉 Book a Lisbon walking tour with GetYourGuide.”
+
+⸻
+
+💰 Monetization
+	•	Free tier: 1 city/day.
+	•	Premium tier: unlock deep itineraries, maps, flight deal alerts.
+	•	Affiliate links: tours, hotels, flights tied to daily city.
+	•	Ads: tasteful, optional (like featured partner cities).
+
+⸻
+
+🔑 Tagline Ideas
+	•	City of the Day — Explore the World, One Day at a Time.
+	•	Daily Felix: City of the Day — Small Steps to Big Journeys.
+	•	City of the Day — Your Daily Passport.
+
+⸻
+
+👉 So this becomes a self-paced, light-touch product:
+	•	Runs automatically with AI content.
+	•	Can generate affiliate income.
+	•	Builds a community of “daily explorers” without requiring your physical time.
+
+⸻
+
+Would you like me to write the exact product description copy (like what you’d paste into Durable or Replit) so you can auto-generate a working prototype of City of the Day just like you did with Word of the Day?

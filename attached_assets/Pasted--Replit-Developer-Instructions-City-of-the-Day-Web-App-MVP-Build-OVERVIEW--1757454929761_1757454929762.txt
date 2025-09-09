@@ -1,0 +1,406 @@
+📦 Replit Developer Instructions – City of the Day™ Web App (MVP Build)
+
+
+
+
+
+
+
+
+
+
+
+🧭 OVERVIEW:
+
+
+
+
+
+City of the Day™ is a lightweight, AI-powered travel inspiration web app that shows users a new global city each day — with curated highlights, local food tips, budget hacks, and a fun fact.
+
+
+
+This is not a travel planner or booking site. It is a daily travel companion, offering micro-learning and wanderlust for everyday users.
+
+
+
+The MVP should be clean, mobile-first, installable as a PWA, and built for daily usage with a clear upgrade path to a paid version.
+
+
+
+
+
+
+
+
+
+🔑 CORE MVP FEATURES TO BUILD
+
+
+
+
+
+
+
+1. 🔐 
+
+User Login System (Authentication)
+
+
+
+
+
+Email + password or magic link sign-in
+“Keep me signed in” toggle
+Guest access allowed (view-only mode)
+
+
+
+
+
+
+
+
+
+
+2. 📅 
+
+Daily City Generator (Content Engine)
+
+
+
+
+
+Show one new city per day to all users
+Admin can:
+Preload or pin city for any date
+OR let AI/randomizer choose next city from list
+
+Use a static JSON or lightweight CMS (Notion, Airtable, etc.) to store city data
+For now, pre-load at least 7 demo cities (e.g., Lisbon, Cape Town, Tokyo, Buenos Aires, San Francisco, Marrakech, Bangkok)
+
+
+
+
+
+
+
+
+
+
+3. 📲 
+
+City Display Card Stack (Frontend UI)
+
+
+
+
+
+Each city card must include:
+
+Card
+
+Content
+
+🌍 City Intro
+
+City name, country, cover image, 1-paragraph description
+
+🏛️ Landmark
+
+1 sentence about a top landmark (e.g., Eiffel Tower in Paris)
+
+🍜 Local Food
+
+Name + short food/drink tip
+
+💸 Budget Tip
+
+Money-saving travel insight
+
+🤓 Fun Fact
+
+Quirky cultural or historical insight
+
+🔗 CTA Buttons
+
+“Book Hotel”, “Explore Tours”, “Search Flights” (use placeholders for now)
+
+All cards shown together or in scroll/swipe format (user can browse in one motion).
+
+
+
+
+
+
+
+
+
+4. 🧳 
+
+City Log / “Postcard” Tracker (Free User Dashboard)
+
+
+
+
+
+Logged-in users can:
+View today’s city
+Save it to their collection (favorite/bookmark)
+See a list of all previously saved cities (but NOT access full content unless they’re premium)
+
+
+
+
+
+
+
+
+
+
+
+5. 💳 
+
+Premium Tier Logic (Paywall System)
+
+
+
+
+
+Free Tier:
+Only today’s city visible
+No access to past cities
+Limited travel tips
+
+Premium Tier:
+Access to previous cities (archive view)
+Downloadable city guide (PDF)
+Custom affiliate links (coming later)
+Weekly “Theme Drops” (e.g., “7 Coastal Cities”)
+
+
+
+
+
+Use Stripe or Gumroad for payments, with monthly ($7) or yearly ($49) subscription options.
+
+
+
+
+
+
+
+
+
+6. 📱 
+
+PWA-Ready
+
+
+
+
+
+App must be installable on mobile & desktop
+Works offline for cached cities
+Display simple splash screen when loading offline
+
+
+
+
+
+
+
+
+
+
+7. 🧑‍💻 
+
+Admin Panel (Basic)
+
+
+
+
+
+Admin can:
+Add/edit cities manually
+Upload city images
+Generate a new city using AI prompt:
+"Create a 100-word travel guide for [City Name] including a famous landmark, local food or drink, a budget travel tip, and a fun cultural fact."
+Pin featured cities
+Track usage (basic analytics like city opens, saves)
+
+
+
+
+
+
+
+
+
+
+
+8. 🌐 
+
+Responsive Design
+
+
+
+
+
+Must be mobile-first
+Use clean typography, travel-inspired visuals, soft card transitions
+Design inspiration: Calm App, Duolingo, Notion, or Blinkist
+
+
+
+
+
+
+
+
+
+
+🧩 TECH STACK RECOMMENDATION (FLEXIBLE)
+
+
+
+Function
+
+Recommended Tools
+
+Web Framework
+
+Next.js or React
+
+Authentication
+
+Firebase Auth or Supabase
+
+Database
+
+Supabase / Firestore / Notion (API)
+
+Payment
+
+Stripe or Gumroad Integration
+
+Content
+
+JSON for now → future CMS via Notion or Airtable
+
+Hosting
+
+Replit or Vercel
+
+PWA Support
+
+Enabled via React PWA plugin or default PWA setup
+
+
+
+
+
+
+
+
+
+🧪 TEST DATA / DEMO CITIES
+
+
+
+
+
+Example City: Lisbon, Portugal
+
+{
+
+  "city": "Lisbon",
+
+  "country": "Portugal",
+
+  "image": "https://yourcdn.com/images/lisbon.jpg",
+
+  "intro": "Lisbon, the hilly capital of Portugal, is known for its colorful architecture, yellow trams, and ocean views.",
+
+  "landmark": "Visit Belém Tower, a 16th-century fortification along the Tagus River.",
+
+  "food": "Pastel de Nata – a sweet custard tart loved by locals.",
+
+  "budget_tip": "Buy a 24-hour tram pass for €6.60 to explore the city affordably.",
+
+  "fun_fact": "Lisbon is older than Rome and one of the oldest cities in Western Europe.",
+
+  "links": {
+
+    "book_hotel": "#",
+
+    "explore_tours": "#",
+
+    "search_flights": "#"
+
+  }
+
+}
+
+
+
+
+
+
+
+
+
+🛠️ OPTIONAL FEATURES (Not Required in First Build)
+
+
+
+
+
+Share button for social
+User-uploaded “city wishlists”
+Community feature (like travel quotes or user notes)
+Theme weeks (e.g., “7 Cities of Africa”)
+
+
+
+
+
+
+
+
+
+
+✅ DELIVERABLES
+
+
+
+
+
+Working MVP on Replit or Vercel
+Admin interface to add cities
+7 sample cities loaded
+Stripe or Gumroad payment connected (or placeholder buttons)
+PWA installable web app
+Responsive design for desktop & mobile
+
+
+
+
+
+
+
+
+
+
+🎯 GOAL OF THIS MVP
+
+
+
+
+
+To launch a daily travel discovery web app that offers:
+
+
+
+Daily curated city experience
+Clean, delightful UI

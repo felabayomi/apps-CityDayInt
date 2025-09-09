@@ -18,14 +18,16 @@ function Router() {
 
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
       ) : (
         <>
-          <Route path="/" component={Home} />
-          <Route path="/library" component={Library} />
-          <Route path="/admin" component={Admin} />
-          <Route path="/analytics" component={Analytics} />
+          <Route path="/" component={!isAuthenticated ? Landing : Home} />
+          {isAuthenticated && <Route path="/library" component={Library} />}
+          {isAuthenticated && <Route path="/admin" component={Admin} />}
+          {isAuthenticated && <Route path="/analytics" component={Analytics} />}
         </>
       )}
       <Route component={NotFound} />

@@ -117,7 +117,38 @@ function CityContentCard({ content, cityName }: { content: CityContent; cityName
       <p className={`font-medium mb-2 ${styles.textColor}`}>{content.title}</p>
       <p className={`text-sm ${styles.descColor} leading-relaxed`}>{content.description}</p>
       
-      <div className="flex justify-between items-center mt-4">
+      {/* Travel CTA Buttons */}
+      <div className="grid grid-cols-3 gap-2 mt-4">
+        <Button 
+          size="sm" 
+          variant="outline"
+          className="text-xs"
+          onClick={() => window.open(`https://booking.com/searchresults.html?ss=${cityName}`, '_blank')}
+          data-testid="button-book-hotel"
+        >
+          🏨 Hotel
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="text-xs"
+          onClick={() => window.open(`https://getyourguide.com/s/?q=${cityName}`, '_blank')}
+          data-testid="button-explore-tours"
+        >
+          🎫 Tours
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline"
+          className="text-xs" 
+          onClick={() => window.open(`https://skyscanner.com/transport/flights/everywhere/${cityName}`, '_blank')}
+          data-testid="button-search-flights"
+        >
+          ✈️ Flights
+        </Button>
+      </div>
+      
+      <div className="flex justify-between items-center mt-3">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -136,20 +167,6 @@ function CityContentCard({ content, cityName }: { content: CityContent; cityName
           <Share2 className="w-3 h-3 mr-1" />
           Share
         </Button>
-        {content.affiliateLink && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`${styles.subtextColor} hover:${styles.textColor} text-xs`}
-            asChild
-            data-testid={`button-book-${content.type}`}
-          >
-            <a href={content.affiliateLink} target="_blank" rel="noopener noreferrer">
-              <MapPin className="w-3 h-3 mr-1" />
-              Book
-            </a>
-          </Button>
-        )}
       </div>
     </Card>
   );

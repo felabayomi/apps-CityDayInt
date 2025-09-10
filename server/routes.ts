@@ -84,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       
       // Simple admin check - in production you'd have proper role-based auth
-      if (!user || !user.email?.includes('admin')) {
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -102,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.email?.includes('admin')) {
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.email?.includes('admin')) {
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -172,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.email?.includes('admin')) {
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -192,7 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.email?.includes('admin')) {
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -346,7 +346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.email?.includes('admin')) {
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -363,7 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.email?.includes('admin')) {
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
         return res.status(403).json({ message: "Admin access required" });
       }
 

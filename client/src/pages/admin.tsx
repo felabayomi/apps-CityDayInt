@@ -50,7 +50,7 @@ export default function Admin() {
 
   // Check admin access
   useEffect(() => {
-    if (user && !user.email?.includes('admin')) {
+    if (user && !user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com') {
       toast({
         title: "Access Denied", 
         description: "You need admin privileges to access this page.",
@@ -62,12 +62,12 @@ export default function Admin() {
   // Stats queries
   const { data: cities = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/cities'],
-    enabled: !!user?.email?.includes('admin'),
+    enabled: !!(user?.email?.includes('admin') || user?.email === 'wordofday2025@gmail.com'),
   });
 
   const { data: analytics = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/analytics/cities'], 
-    enabled: !!user?.email?.includes('admin'),
+    enabled: !!(user?.email?.includes('admin') || user?.email === 'wordofday2025@gmail.com'),
   });
 
   // Create city mutation
@@ -224,7 +224,7 @@ export default function Admin() {
 
   const currentTab = contentTabs.find(tab => tab.type === activeContentTab);
 
-  if (!user?.email?.includes('admin')) {
+  if (!user?.email?.includes('admin') && user?.email !== 'wordofday2025@gmail.com') {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card className="p-8 text-center">

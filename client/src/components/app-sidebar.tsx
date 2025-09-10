@@ -57,7 +57,7 @@ export function AppSidebar() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   
-  const isAdmin = user?.email?.includes('admin');
+  const isAdmin = user?.email?.includes('admin') || user?.email === 'wordofday2025@gmail.com';
 
   return (
     <Sidebar>

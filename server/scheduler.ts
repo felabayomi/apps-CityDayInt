@@ -242,17 +242,12 @@ export async function autoPublishScheduledCities(): Promise<{ published: string[
 }
 
 export function startScheduler() {
-  // On startup: if it's already past 2pm EST and tomorrow has no city, generate one now
+  // On startup: always check if tomorrow needs a city and if any cities need publishing
   setTimeout(async () => {
-    const nowUTC = new Date();
-    const hourUTC = nowUTC.getUTCHours();
-    // 19:00 UTC = 2pm EST. If we're past 2pm EST, ensure tomorrow has a city.
-    if (hourUTC >= 19) {
-      console.log("[Scheduler] Startup catch-up: checking if tomorrow needs a city...");
-      const result = await generateTomorrowsCity();
-      console.log(`[Scheduler] Startup catch-up result: ${result.message}`);
-    }
-    // Also run auto-publish in case any scheduled cities are due
+    console.log("[Scheduler] Startup check: ensuring tomorrow has a city...");
+    const result = await generateTomorrowsCity();
+    console.log(`[Scheduler] Startup check result: ${result.message}`);
+    // Also auto-publish any scheduled cities that are now due
     await autoPublishScheduledCities();
   }, 3000); // small delay so DB is ready
 

@@ -63,7 +63,7 @@ function AppContent() {
                 <div className="flex items-center space-x-4">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
                   <div className="flex items-center space-x-3">
-                    <img src="/logo.png" alt="Daily Felix" className="w-14 h-14 object-contain" />
+                    <img src="/logo.png" alt="Daily Felix" className="w-20 h-20 object-contain" />
                     <div>
                       <h1 className="text-xl font-bold text-foreground">Daily Felix</h1>
                       <p className="text-xs text-muted-foreground">City of the Day · International</p>

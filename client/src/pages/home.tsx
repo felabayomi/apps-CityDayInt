@@ -201,7 +201,7 @@ export default function Home() {
         <Card className="p-4 sm:p-8">
           <div className="flex items-center justify-between gap-2 flex-wrap mb-4 sm:mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-foreground">Travel Plans</h2>
-            <Button size="sm" className="bg-primary hover:bg-primary/90" data-testid="button-new-plan">
+            <Button size="sm" className="bg-primary hover:bg-primary/90" data-testid="button-new-plan" onClick={() => window.open('https://plan.citydiscoverer.ai/', '_blank')}>
               <Calendar className="w-4 h-4 mr-2" />
               New Plan
             </Button>
@@ -229,7 +229,7 @@ export default function Home() {
               ))}
               
               {travelPlans.length > 3 && (
-                <Button variant="ghost" className="w-full mt-4" data-testid="button-view-all-plans">
+                <Button variant="ghost" className="w-full mt-4" data-testid="button-view-all-plans" onClick={() => window.open('https://plan.citydiscoverer.ai/', '_blank')}>
                   View All Travel Plans
                 </Button>
               )}
@@ -239,7 +239,7 @@ export default function Home() {
               <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">No Travel Plans Yet</h3>
               <p className="text-muted-foreground mb-4">Start planning your next adventure!</p>
-              <Button className="bg-primary hover:bg-primary/90" data-testid="button-create-first-plan">
+              <Button className="bg-primary hover:bg-primary/90" data-testid="button-create-first-plan" onClick={() => window.open('https://plan.citydiscoverer.ai/', '_blank')}>
                 Create Your First Plan
               </Button>
             </div>

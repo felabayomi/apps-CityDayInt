@@ -191,6 +191,46 @@ export default function Admin() {
   });
 
   const [editingScheduled, setEditingScheduled] = useState<{ contentId: string; type: string; title: string; description: string } | null>(null);
+  const [editingCityMeta, setEditingCityMeta] = useState<{ name: string; country: string; region: string; funFact: string; publishDate: string } | null>(null);
+  const [activeTab, setActiveTab] = useState("scheduler");
+
+  const loadCityForEdit = async (city: any) => {
+    try {
+      const res = await fetch(`/api/admin/cities/${city.id}/detail`, { credentials: 'include' });
+      const detail = await res.json();
+      setSelectedCityId(city.id);
+      setEditingCityMeta({
+        name: detail.name || '',
+        country: detail.country || '',
+        region: detail.region || '',
+        funFact: detail.funFact || '',
+        publishDate: detail.publishDate ? new Date(detail.publishDate).toISOString().split('T')[0] : '',
+      });
+      if (detail.content?.length > 0) {
+        setContentTabs(detail.content.map((c: any) => ({
+          id: c.id, type: c.type, title: c.title,
+          description: c.description, imageUrl: c.imageUrl || '', affiliateLink: c.affiliateLink || '',
+        })));
+      }
+      setActiveTab("content");
+    } catch {
+      toast({ title: "Error", description: "Could not load city content.", variant: "destructive" });
+    }
+  };
+
+  const saveCityMetaMutation = useMutation({
+    mutationFn: async ({ cityId, data }: { cityId: string; data: any }) => {
+      const res = await apiRequest('PUT', `/api/admin/cities/${cityId}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/cities'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cities/today'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cities/archive'] });
+      toast({ title: "Saved", description: "City details updated." });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
 
   const currentTab = contentTabs.find((t) => t.type === activeContentTab);
 
@@ -299,7 +339,7 @@ export default function Admin() {
         </Card>
       )}
 
-      <Tabs defaultValue="scheduler" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="scheduler">
             <CalendarCheck className="w-3 h-3 mr-1" />
@@ -673,13 +713,24 @@ export default function Admin() {
                       <td className="py-3 px-3 text-foreground">{city.views || 0}</td>
                       <td className="py-3 px-3">
                         <div className="flex gap-2">
+                          {city.status === 'published' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setLocation(`/city/${city.id}`)}
+                              data-testid={`button-view-${city.id}`}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
                             size="sm"
-                            variant="ghost"
-                            onClick={() => setLocation(`/city/${city.id}`)}
-                            data-testid={`button-view-${city.id}`}
+                            variant="outline"
+                            onClick={() => loadCityForEdit(city)}
+                            data-testid={`button-edit-${city.id}`}
                           >
-                            <Eye className="w-4 h-4" />
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
                           </Button>
                           {city.status !== 'published' ? (
                             <Button
@@ -693,7 +744,7 @@ export default function Admin() {
                           ) : (
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="ghost"
                               onClick={() => handleUnpublish(city.id)}
                               disabled={updateCityMutation.isPending}
                               data-testid={`button-unpublish-${city.id}`}
@@ -713,9 +764,83 @@ export default function Admin() {
 
         {/* Content Editor Tab */}
         <TabsContent value="content">
+          {/* City metadata editing */}
+          {editingCityMeta && selectedCityId && (
+            <Card className="p-6 mb-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 className="text-lg font-bold text-foreground">City Details</h2>
+                <Button
+                  size="sm"
+                  onClick={() => saveCityMetaMutation.mutate({
+                    cityId: selectedCityId,
+                    data: {
+                      name: editingCityMeta.name,
+                      country: editingCityMeta.country,
+                      region: editingCityMeta.region,
+                      funFact: editingCityMeta.funFact,
+                      publishDate: editingCityMeta.publishDate ? new Date(editingCityMeta.publishDate) : undefined,
+                    }
+                  })}
+                  disabled={saveCityMetaMutation.isPending}
+                  data-testid="button-save-city-meta"
+                >
+                  <Save className="w-3 h-3 mr-1" />
+                  Save Details
+                </Button>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>City Name</Label>
+                  <Input
+                    value={editingCityMeta.name}
+                    onChange={(e) => setEditingCityMeta((p) => p ? { ...p, name: e.target.value } : p)}
+                    data-testid="input-edit-city-name"
+                  />
+                </div>
+                <div>
+                  <Label>Country</Label>
+                  <Input
+                    value={editingCityMeta.country}
+                    onChange={(e) => setEditingCityMeta((p) => p ? { ...p, country: e.target.value } : p)}
+                    data-testid="input-edit-country"
+                  />
+                </div>
+                <div>
+                  <Label>Region</Label>
+                  <Select value={editingCityMeta.region} onValueChange={(v) => setEditingCityMeta((p) => p ? { ...p, region: v } : p)}>
+                    <SelectTrigger><SelectValue placeholder="Select region" /></SelectTrigger>
+                    <SelectContent>
+                      {["Europe", "Asia", "Africa", "Americas", "Oceania", "Middle East"].map((r) => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Publish Date</Label>
+                  <Input
+                    type="date"
+                    value={editingCityMeta.publishDate}
+                    onChange={(e) => setEditingCityMeta((p) => p ? { ...p, publishDate: e.target.value } : p)}
+                    data-testid="input-edit-publish-date"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label>Fun Fact</Label>
+                  <Textarea
+                    rows={2}
+                    value={editingCityMeta.funFact}
+                    onChange={(e) => setEditingCityMeta((p) => p ? { ...p, funFact: e.target.value } : p)}
+                    data-testid="input-edit-fun-fact"
+                  />
+                </div>
+              </div>
+            </Card>
+          )}
+
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-foreground">Edit Content</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <h2 className="text-xl font-bold text-foreground">Edit Content Cards</h2>
               <Button
                 size="sm"
                 onClick={() => currentTab && handleSaveContent(currentTab.id, currentTab)}
@@ -723,7 +848,7 @@ export default function Admin() {
                 data-testid="button-save-content"
               >
                 <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                Save Card
               </Button>
             </div>
 

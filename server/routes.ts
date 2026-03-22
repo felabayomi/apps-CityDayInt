@@ -236,6 +236,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fetch a single city with content for admin editing (any status)
+  app.get('/api/admin/cities/:cityId/detail', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { cityId } = req.params;
+      const city = await storage.getCityById(cityId);
+      if (!city) return res.status(404).json({ message: "City not found" });
+      const content = await storage.getCityContent(city.id);
+      res.json({ ...city, content });
+    } catch (error) {
+      console.error("Error fetching city detail:", error);
+      res.status(500).json({ message: "Failed to fetch city" });
+    }
+  });
+
   // Scheduler status — what's scheduled for tomorrow
   app.get('/api/admin/scheduler/status', isAuthenticated, async (req: any, res) => {
     try {

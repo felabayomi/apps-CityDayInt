@@ -417,6 +417,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Server-to-Server Integration (plan.citydiscoverer.ai) ────────────────
+  // Auth: Authorization: Bearer <INTEGRATION_API_KEY>
+  // All routes accept a `userId` (Replit user ID) in the request body/params.
+
+  const verifyIntegrationKey = (req: any, res: any, next: any) => {
+    const auth = req.headers.authorization || '';
+    const key = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+    if (!process.env.INTEGRATION_API_KEY || key !== process.env.INTEGRATION_API_KEY) {
+      return res.status(401).json({ message: "Invalid or missing integration API key" });
+    }
+    next();
+  };
+
+  // GET /api/integration/plans?userId=xxx  — fetch all plans for a user
+  app.get('/api/integration/plans', verifyIntegrationKey, async (req: any, res) => {
+    try {
+      const { userId } = req.query;
+      if (!userId) return res.status(400).json({ message: "userId is required" });
+      const plans = await storage.getUserTravelPlans(userId as string);
+      res.json(plans);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch plans" });
+    }
+  });
+
+  // POST /api/integration/plans  — create a plan for a user
+  app.post('/api/integration/plans', verifyIntegrationKey, async (req: any, res) => {
+    try {
+      const { userId, name, status, duration, budget } = req.body;
+      if (!userId || !name) return res.status(400).json({ message: "userId and name are required" });
+      const plan = await storage.createTravelPlan({ userId, name, status: status || 'draft', duration, budget });
+      res.status(201).json(plan);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to create plan" });
+    }
+  });
+
+  // PUT /api/integration/plans/:planId  — update a plan
+  app.put('/api/integration/plans/:planId', verifyIntegrationKey, async (req: any, res) => {
+    try {
+      const { planId } = req.params;
+      const { name, status, duration, budget } = req.body;
+      const updated = await storage.updateTravelPlan(planId, { name, status, duration, budget });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to update plan" });
+    }
+  });
+
+  // DELETE /api/integration/plans/:planId  — delete a plan
+  app.delete('/api/integration/plans/:planId', verifyIntegrationKey, async (req: any, res) => {
+    try {
+      const { planId } = req.params;
+      await storage.deleteTravelPlan(planId);
+      res.json({ message: "Plan deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to delete plan" });
+    }
+  });
+  // ──────────────────────────────────────────────────────────────────────────
+
   // Travel plans
   app.post('/api/travel-plans', isAuthenticated, async (req: any, res) => {
     try {

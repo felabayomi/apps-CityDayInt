@@ -32,7 +32,7 @@ interface ContentTab {
 }
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -52,10 +52,14 @@ export default function Admin() {
   const [selectedCityId, setSelectedCityId] = useState<string>('');
 
   useEffect(() => {
+    if (!isLoading && !user) {
+      window.location.href = '/api/login';
+      return;
+    }
     if (user && !isAdmin(user.email)) {
       toast({ title: "Access Denied", description: "You need admin privileges.", variant: "destructive" });
     }
-  }, [user, toast]);
+  }, [user, isLoading, toast]);
 
   const { data: cities = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/cities'],
@@ -162,6 +166,14 @@ export default function Admin() {
       default: return Moon;
     }
   };
+
+  if (isLoading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!isAdmin(user?.email)) {
     return (

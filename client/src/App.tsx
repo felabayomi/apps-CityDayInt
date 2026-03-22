@@ -33,9 +33,9 @@ function Router() {
           )}
           <Route path="/archive" component={Archive} />
           <Route path="/city/:id" component={CityPage} />
-          {isAuthenticated && <Route path="/library" component={Library} />}
-          {isAuthenticated && <Route path="/admin" component={Admin} />}
-          {isAuthenticated && <Route path="/analytics" component={Analytics} />}
+          <Route path="/library" component={Library} />
+          <Route path="/admin" component={Admin} />
+          <Route path="/analytics" component={Analytics} />
         </>
       )}
       <Route component={NotFound} />

@@ -1,0 +1,37 @@
+How the push notifications are built
+The moving parts
+There are four pieces that work together:
+
+1. VAPID keys — your server's identity
+You generate a public/private key pair once. The public key goes to the browser so it knows notifications are coming from your server. The private key stays secret on the server and signs outgoing pushes. Any app that uses web-push (Node.js) can generate these with one command:
+
+npx web-push generate-vapid-keys
+2. The browser subscription
+When the user clicks "Enable Alerts", the browser:
+
+Asks for notification permission
+Calls pushManager.subscribe() with your public VAPID key
+Gets back a subscription object containing an endpoint URL (unique to that browser) and two encryption keys (p256dh and auth)
+You then POST that subscription object to your server and save it in a database table with those three fields: endpoint, p256dh, auth.
+
+3. The service worker
+A small JavaScript file (sw.js) registered in the browser that runs in the background even when the app is closed. It listens for a push event and calls showNotification(). When the user taps the notification, a notificationclick event fires and opens the app at the right URL. This file lives in your public/ folder.
+
+4. The server scheduler
+A setInterval running every 60 seconds on the server. Each tick it:
+
+Loads all upcoming meetings from the database
+For each meeting, checks if any of its reminder times (e.g. 15 min before, 60 min before) fall within the current window
+Uses a notification_log table to record what's already been sent, so duplicates never happen even after a server restart
+Calls webPush.sendNotification() for each stored subscription
+The notification_log table — the key to reliability
+This is what prevents double-sends. Before firing a notification, you write a row (meeting_id, reminder_minutes, fire_at) with a unique constraint. If the insert succeeds, you send. If it fails (duplicate), you skip. This makes the scheduler safe to crash and restart.
+
+The minimal stack to replicate this
+Layer	What you need
+Server	Node.js + web-push npm package
+Database	Any DB — just two tables: push_subscriptions and notification_log
+Frontend	Standard browser PushManager API + a service worker file
+Scheduler	setInterval on your server (or a cron job)
+No third-party push service (Firebase, OneSignal, etc.) needed — it's all direct browser push, which works on Android and desktop Chrome/Edge. iOS Safari added support in iOS 16.4+ when installed as a PWA.
+

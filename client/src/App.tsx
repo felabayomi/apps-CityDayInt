@@ -68,7 +68,7 @@ function AppContent() {
                     </div>
                     <div>
                       <h1 className="text-xl font-bold text-foreground">Daily Felix</h1>
-                      <p className="text-xs text-muted-foreground">City of the Day</p>
+                      <p className="text-xs text-muted-foreground">City of the Day · International</p>
                     </div>
                   </div>
                 </div>

@@ -1,8 +1,8 @@
-# Daily Felix - City of the Day
+# Daily Felix – City of the Day International
 
 ## Overview
 
-Daily Felix - City of the Day is a travel-focused web application that delivers daily curated city content to inspire wanderlust and educate users about destinations worldwide. The platform presents one featured city per day with three content cards covering morning discoveries (landmarks), afternoon experiences (food/culture), and evening insights (budget tips). The application uses AI-powered content generation through OpenAI's GPT models to create engaging, educational travel content while maintaining a lightweight, user-friendly experience.
+Daily Felix – City of the Day International is a travel-focused web application that delivers one iconic international city every day, focused on the world's most popular tourist destinations. The AI generates content for globally recognised cities (Paris, Tokyo, Rome, Bangkok, etc.) covering morning discoveries (landmarks), afternoon experiences (food/culture), and evening insights (budget tips). The application uses AI-powered content generation through OpenAI's GPT models to create engaging, educational travel content while maintaining a lightweight, user-friendly experience.
 
 The platform follows a freemium model with basic daily city access for all users and premium features for subscribers. It's designed as a Progressive Web App (PWA) that works offline and can be installed on mobile devices, making it accessible for daily consumption of travel inspiration.
 

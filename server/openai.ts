@@ -27,44 +27,46 @@ export interface CityContentData {
 
 export async function generateCityContent(cityName: string): Promise<CityContentData> {
   try {
-    const prompt = `Generate comprehensive travel content for ${cityName}. 
+    const prompt = `Generate engaging travel content for ${cityName} as today's Daily Felix – City of the Day International feature.
+
+This city must be treated as a world-famous, popular international tourist destination. Focus on experiences that are iconic, widely beloved, and genuinely useful for international visitors.
 
 Please provide:
-1. Morning discovery content: A landmark or cultural site to visit
-2. Afternoon content: Local food or cultural experience  
-3. Evening content: A practical budget tip or local insight
-4. A fascinating fun fact about the city
-5. The country flag emoji for the city
+1. Morning discovery: The city's most iconic landmark or must-see cultural site — describe what makes it unmissable for international tourists
+2. Afternoon experience: The best local food scene or cultural experience that defines the city's international identity
+3. Evening insight: A practical budget tip or insider travel hack that international visitors will find valuable
+4. A surprising fun fact most international tourists don't know
+5. The country flag emoji
 
 Format the response as JSON with this exact structure:
 {
   "morning": {
-    "title": "Short engaging title (e.g., 'Visit Historic Cathedral')",
-    "description": "2-3 sentence description of what to do and why it's special",
-    "imagePrompt": "Detailed prompt for generating an image of this landmark/activity"
+    "title": "Short, punchy title (e.g., 'The Eiffel Tower at Sunrise')",
+    "description": "2-3 sentences describing why this is a must-see for international tourists, what to expect, and a practical tip",
+    "imagePrompt": "Detailed visual prompt for an iconic photo of this landmark/attraction"
   },
   "afternoon": {
     "title": "Local food or cultural experience title",
-    "description": "2-3 sentence description of the food/experience",
-    "imagePrompt": "Detailed prompt for generating an image of this food/cultural element"
+    "description": "2-3 sentences on the must-try dish, market, or cultural activity that defines the city internationally",
+    "imagePrompt": "Detailed visual prompt for vibrant food or cultural scene imagery"
   },
   "evening": {
-    "title": "Budget tip or practical advice title",
-    "description": "2-3 sentence practical travel tip to save money or enhance the experience",
-    "imagePrompt": "Detailed prompt for generating an image related to this tip (transport, markets, etc.)"
+    "title": "Smart travel tip or budget insight",
+    "description": "2-3 sentences of practical advice: best time to visit, how to save money, what to avoid as a tourist, or a local secret",
+    "imagePrompt": "Visual prompt for a city scene at golden hour or evening that reflects the tip"
   },
-  "funFact": "An interesting and surprising fact about the city that most people don't know",
+  "funFact": "A surprising, specific, and memorable fact about ${cityName} that even frequent travelers often don't know",
   "flag": "Country flag emoji for ${cityName}"
 }
 
-Ensure all content is authentic, practical, and engaging. Focus on experiences that give travelers genuine cultural insights.`;
+Ensure the tone is enthusiastic yet informative — the kind of content that makes someone want to book a flight immediately.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025
       messages: [
         {
           role: "system",
-          content: "You are a knowledgeable travel expert who creates engaging, authentic content about cities around the world. Always respond with valid JSON formatted exactly as requested."
+          content: "You are a world-class travel editor for Daily Felix – City of the Day International, a platform that features one iconic international tourist destination every day. You write content that is vivid, accurate, and inspires people to explore the world's most popular destinations. Always respond with valid JSON formatted exactly as requested."
         },
         {
           role: "user",
@@ -124,7 +126,7 @@ export async function analyzeCityImage(base64Image: string): Promise<string> {
           content: [
             {
               type: "text",
-              text: "Analyze this city image and describe what you see. Focus on architectural features, cultural elements, and any identifying landmarks that would help travelers understand the location."
+              text: "Analyze this city image and describe what you see. Focus on architectural features, cultural elements, and any identifying landmarks that would help international travelers understand the location."
             },
             {
               type: "image_url",

@@ -107,9 +107,10 @@ export default function Landing() {
                 size="sm"
                 onClick={() => window.open('https://schedez.io/', '_blank')}
                 data-testid="button-travel-expert"
-                className="hidden sm:flex items-center gap-1.5"
+                className="flex items-center gap-1.5"
               >
-                Travel Expert Consultation
+                <span className="sm:hidden">Travel Expert</span>
+                <span className="hidden sm:inline">Travel Expert Consultation</span>
               </Button>
               <Button
                 size="sm"

@@ -251,8 +251,8 @@ export function startScheduler() {
     await autoPublishScheduledCities();
   }, 3000); // small delay so DB is ready
 
-  // Generate tomorrow's city at 2pm EST (19:00 UTC) every day
-  cron.schedule("0 19 * * *", async () => {
+  // Generate tomorrow's city at 3pm EST (20:00 UTC) every day
+  cron.schedule("0 20 * * *", async () => {
     console.log("[Scheduler] Daily generation job triggered");
     await generateTomorrowsCity();
   }, { timezone: "UTC" });
@@ -263,5 +263,5 @@ export function startScheduler() {
     await autoPublishScheduledCities();
   }, { timezone: "UTC" });
 
-  console.log("[Scheduler] Started — generate at 2pm EST, auto-publish at 9am EST next day");
+  console.log("[Scheduler] Started — generate at 3pm EST, auto-publish at 9am EST next day");
 }

@@ -281,26 +281,30 @@ export function CityCards({ city, onSaveToggle, isUserSaved = false }: CityCards
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        {isAuthenticated && (
-          <Button 
-            onClick={() => saveMutation.mutate()}
-            disabled={saveMutation.isPending}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-semibold"
-            data-testid="button-save-city"
-          >
-            {saved ? (
-              <>
-                <Heart className="w-4 h-4 mr-2 fill-current" />
-                Saved to My Cities
-              </>
-            ) : (
-              <>
-                <Heart className="w-4 h-4 mr-2" />
-                Add to My Cities
-              </>
-            )}
-          </Button>
-        )}
+        <Button 
+          onClick={() => {
+            if (!isAuthenticated) {
+              window.location.href = '/api/login';
+              return;
+            }
+            saveMutation.mutate();
+          }}
+          disabled={saveMutation.isPending}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-semibold"
+          data-testid="button-save-city"
+        >
+          {saved ? (
+            <>
+              <Heart className="w-4 h-4 mr-2 fill-current" />
+              Saved to My Cities
+            </>
+          ) : (
+            <>
+              <Heart className="w-4 h-4 mr-2" />
+              {isAuthenticated ? 'Add to My Cities' : 'Sign In to Save'}
+            </>
+          )}
+        </Button>
         <Button 
           onClick={handleShare}
           disabled={shareMutation.isPending}

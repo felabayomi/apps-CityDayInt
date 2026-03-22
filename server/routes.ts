@@ -57,29 +57,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get recent cities (limited for free users) - must be before /:cityId
+  // Get recent cities - all published cities are visible to everyone - must be before /:cityId
   app.get('/api/cities/recent', async (req: any, res) => {
     try {
-      let limit = 5; // Default for non-authenticated users
-      
-      if (req.headers.authorization || req.user) {
-        // Check if user is authenticated and premium
-        try {
-          const userId = req.user?.claims?.sub;
-          if (userId) {
-            const user = await storage.getUser(userId);
-            if (user?.isPremium) {
-              limit = 50; // Premium users get more cities
-            } else {
-              limit = 10; // Authenticated free users get a few more
-            }
-          }
-        } catch (authError) {
-          // Continue with default limit if auth check fails
-        }
-      }
-
-      const cities = await storage.getRecentCities(limit);
+      const cities = await storage.getRecentCities(50);
       const citiesWithContent = await Promise.all(
         cities.map(async (city) => ({
           ...city,

@@ -51,8 +51,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <div className="flex items-center justify-center px-4 py-3 border-b border-sidebar-border">
-        <img src="/logo.png" alt="Daily Felix" className="h-16 w-auto max-w-full object-contain" />
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-sidebar-border">
+        <img src="/logo.png" alt="Daily Felix" className="w-10 h-10 object-contain flex-shrink-0" />
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-sidebar-foreground leading-tight">Daily Felix</p>
+          <p className="text-xs text-sidebar-foreground/60 leading-tight truncate">City of the Day</p>
+        </div>
       </div>
       <SidebarContent>
         <SidebarGroup>

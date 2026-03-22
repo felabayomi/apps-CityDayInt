@@ -369,7 +369,7 @@ export default function Admin() {
                     <Badge variant="outline" className="text-green-600 border-green-300">Active</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Generates tomorrow's city at <strong>8am EST</strong> · Auto-publishes at <strong>9am EST</strong> if not manually approved
+                    Generates tomorrow's city at <strong>2pm EST</strong> · Auto-publishes at <strong>9am EST</strong> if not manually approved
                   </p>
                 </div>
                 <Button
@@ -519,7 +519,7 @@ export default function Admin() {
                     <Wand2 className="w-4 h-4 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-foreground">8am EST — Generate</p>
+                    <p className="font-medium text-sm text-foreground">2pm EST — Generate</p>
                     <p className="text-xs text-muted-foreground">AI picks an unvisited city and writes all three content cards for tomorrow</p>
                   </div>
                 </div>

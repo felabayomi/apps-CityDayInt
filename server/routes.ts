@@ -326,6 +326,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: list all users
+  app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const allUsers = await storage.getAllUsers();
+      res.json(allUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Admin: toggle premium for a user
+  app.post('/api/admin/users/:targetUserId/premium', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { isPremium } = req.body;
+      const updated = await storage.setUserPremium(req.params.targetUserId, !!isPremium);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
   // Approve a scheduled city immediately
   app.post('/api/admin/cities/:cityId/approve', isAuthenticated, async (req: any, res) => {
     try {

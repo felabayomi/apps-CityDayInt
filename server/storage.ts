@@ -60,6 +60,10 @@ export interface IStorage {
   getCityAnalytics(): Promise<any[]>;
   getUserStats(userId: string): Promise<any>;
   getRevenueStats(): Promise<any>;
+
+  // Admin user management
+  getAllUsers(): Promise<User[]>;
+  setUserPremium(userId: string, isPremium: boolean): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -67,6 +71,19 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async setUserPremium(userId: string, isPremium: boolean): Promise<User> {
+    const [updated] = await db
+      .update(users)
+      .set({ isPremium, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {

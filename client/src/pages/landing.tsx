@@ -103,11 +103,20 @@ export default function Landing() {
                 USA Cities
               </Button>
               <Button
+                variant="outline"
                 size="sm"
-                onClick={() => window.location.href = 'https://schedez.io/'}
+                onClick={() => window.open('https://schedez.io/', '_blank')}
+                data-testid="button-travel-expert"
+                className="hidden sm:flex items-center gap-1.5"
+              >
+                Travel Expert Consultation
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => window.location.href = '/api/login'}
                 data-testid="button-login"
               >
-                Get Started
+                Sign In / Register
               </Button>
             </div>
           </div>
@@ -135,12 +144,12 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button 
                 size="lg"
-                onClick={() => window.location.href = 'https://live-loop.live/'}
+                onClick={() => window.location.href = '/api/login'}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground text-base"
                 data-testid="button-start-exploring"
               >
                 <Globe className="mr-2" size={18} />
-                Start Exploring Today
+                Sign In / Get Started
               </Button>
               <Button 
                 size="lg"

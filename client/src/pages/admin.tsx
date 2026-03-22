@@ -66,6 +66,23 @@ export default function Admin() {
     enabled: isAdmin(user?.email),
   });
 
+  const { data: allUsers = [], refetch: refetchUsers } = useQuery<any[]>({
+    queryKey: ['/api/admin/users'],
+    enabled: isAdmin(user?.email),
+  });
+
+  const togglePremiumMutation = useMutation({
+    mutationFn: async ({ userId, isPremium }: { userId: string; isPremium: boolean }) => {
+      const res = await apiRequest('POST', `/api/admin/users/${userId}/premium`, { isPremium });
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchUsers();
+      toast({ title: "Premium status updated" });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
   const { data: schedulerStatus, isLoading: schedulerLoading, refetch: refetchScheduler } = useQuery<any>({
     queryKey: ['/api/admin/scheduler/status'],
     enabled: isAdmin(user?.email),
@@ -346,7 +363,7 @@ export default function Admin() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="scheduler">
             <CalendarCheck className="w-3 h-3 mr-1" />
             Scheduler
@@ -354,6 +371,7 @@ export default function Admin() {
           <TabsTrigger value="create">Create City</TabsTrigger>
           <TabsTrigger value="manage">All Cities</TabsTrigger>
           <TabsTrigger value="content" disabled={contentTabs.length === 0}>Edit Content</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
 
         {/* Scheduler Tab */}
@@ -943,6 +961,63 @@ export default function Admin() {
               <div className="text-center py-12 text-muted-foreground">
                 <BookOpen className="mx-auto h-10 w-10 mb-3" />
                 <p>Generate content for a city first to edit it here.</p>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* Users Tab */}
+        <TabsContent value="users">
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-foreground">User Management</h2>
+              <span className="text-sm text-muted-foreground">{allUsers.length} registered users</span>
+            </div>
+            {allUsers.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground">No users yet.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-xs text-muted-foreground uppercase">
+                      <th className="pb-2 pr-4">User</th>
+                      <th className="pb-2 pr-4">Email</th>
+                      <th className="pb-2 pr-4">Joined</th>
+                      <th className="pb-2 text-center">Premium</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {allUsers.map((u: any) => (
+                      <tr key={u.id} className="py-2">
+                        <td className="py-3 pr-4">
+                          <div className="flex items-center gap-2">
+                            {u.profileImageUrl && (
+                              <img src={u.profileImageUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+                            )}
+                            <span className="font-medium text-foreground">
+                              {u.firstName || u.lastName ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'User'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 pr-4 text-muted-foreground">{u.email || '—'}</td>
+                        <td className="py-3 pr-4 text-muted-foreground">
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
+                        </td>
+                        <td className="py-3 text-center">
+                          <Button
+                            size="sm"
+                            variant={u.isPremium ? "default" : "outline"}
+                            onClick={() => togglePremiumMutation.mutate({ userId: u.id, isPremium: !u.isPremium })}
+                            disabled={togglePremiumMutation.isPending}
+                            className="text-xs"
+                          >
+                            {u.isPremium ? "Premium ✓" : "Set Premium"}
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </Card>

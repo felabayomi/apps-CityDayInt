@@ -45,7 +45,7 @@ function Router() {
 }
 
 function AppContent() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   
   // Custom sidebar width for travel application
   const style = {
@@ -74,10 +74,21 @@ function AppContent() {
                 
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <NotificationBanner />
-                  <div className="hidden md:flex items-center space-x-2 bg-accent/10 px-3 py-1 rounded-full">
-                    <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium text-accent-foreground">Premium Active</span>
-                  </div>
+                  {user?.isPremium ? (
+                    <div className="hidden md:flex items-center gap-2 bg-accent/10 px-3 py-1 rounded-full">
+                      <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium text-accent-foreground">Premium Active</span>
+                    </div>
+                  ) : (
+                    <a
+                      href="https://citydiscoverer.ai/subscribe"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hidden md:flex items-center gap-2 bg-primary/10 hover:bg-primary/20 border border-primary/20 px-3 py-1 rounded-full text-sm font-medium text-primary transition-colors"
+                    >
+                      Try Premium
+                    </a>
+                  )}
                   <button 
                     onClick={() => window.location.href = '/api/logout'}
                     className="text-xs sm:text-sm text-muted-foreground hover:text-foreground whitespace-nowrap"

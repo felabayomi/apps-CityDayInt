@@ -95,10 +95,11 @@ export default function Landing() {
                 size="lg"
                 variant="outline"
                 className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border-white/30 px-8 py-4 text-lg"
+                onClick={() => window.location.href = 'https://citydiscoverer.ai/subscribe'}
                 data-testid="button-try-premium"
               >
                 <CheckCircle className="mr-2" size={20} />
-                Try Premium Free
+                Try Premium
               </Button>
             </div>
           </div>

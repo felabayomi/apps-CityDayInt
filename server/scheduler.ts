@@ -165,14 +165,28 @@ async function hasCityScheduledForTomorrow(): Promise<boolean> {
   return !!existing;
 }
 
-export async function generateTomorrowsCity(): Promise<{ success: boolean; message: string; city?: any }> {
+export async function generateTomorrowsCity(force = false): Promise<{ success: boolean; message: string; city?: any }> {
   try {
     console.log("[Scheduler] Checking if tomorrow already has a city...");
     const alreadyScheduled = await hasCityScheduledForTomorrow();
 
     if (alreadyScheduled) {
-      console.log("[Scheduler] Tomorrow already has a city scheduled. Skipping.");
-      return { success: true, message: "Tomorrow already has a city scheduled." };
+      if (!force) {
+        console.log("[Scheduler] Tomorrow already has a city scheduled. Skipping.");
+        return { success: true, message: "Tomorrow already has a city scheduled." };
+      }
+      // Force mode: delete the existing scheduled city and regenerate
+      console.log("[Scheduler] Force regenerate — deleting existing scheduled city for tomorrow...");
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const startOfTomorrow = new Date(tomorrow);
+      startOfTomorrow.setUTCHours(0, 0, 0, 0);
+      const endOfTomorrow = new Date(tomorrow);
+      endOfTomorrow.setUTCHours(23, 59, 59, 999);
+      await db.delete(cities).where(
+        sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published')`
+      );
+      console.log("[Scheduler] Deleted. Proceeding with fresh generation...");
     }
 
     const usedNames = await getUsedCityNames();

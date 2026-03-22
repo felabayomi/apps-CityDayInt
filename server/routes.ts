@@ -300,7 +300,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const result = await generateTomorrowsCity();
+      const force = req.body?.force === true;
+      const result = await generateTomorrowsCity(force);
       res.json(result);
     } catch (error) {
       console.error("Error triggering generation:", error);

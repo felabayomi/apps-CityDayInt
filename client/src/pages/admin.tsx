@@ -164,8 +164,8 @@ export default function Admin() {
   };
 
   const generateTomorrowMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest('POST', '/api/admin/scheduler/generate', {});
+    mutationFn: async (force = false) => {
+      const res = await apiRequest('POST', '/api/admin/scheduler/generate', { force });
       return res.json();
     },
     onSuccess: (data) => {
@@ -406,12 +406,14 @@ export default function Admin() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => generateTomorrowMutation.mutate()}
+                        onClick={() => generateTomorrowMutation.mutate(true)}
                         disabled={generateTomorrowMutation.isPending}
                         data-testid="button-regenerate-tomorrow"
                       >
-                        <RefreshCw className="w-3 h-3 mr-1" />
-                        Regenerate
+                        {generateTomorrowMutation.isPending
+                          ? <><RefreshCw className="w-3 h-3 mr-1 animate-spin" />Generating...</>
+                          : <><RefreshCw className="w-3 h-3 mr-1" />Force Regenerate</>
+                        }
                       </Button>
                       <Button
                         size="sm"

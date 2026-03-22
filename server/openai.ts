@@ -74,7 +74,6 @@ Ensure the tone is enthusiastic yet informative — the kind of content that mak
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.7,
       max_completion_tokens: 1500,
     });
 

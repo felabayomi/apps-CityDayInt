@@ -63,9 +63,7 @@ function AppContent() {
                 <div className="flex items-center space-x-4">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
-                      <i className="fas fa-globe-americas text-white text-lg"></i>
-                    </div>
+                    <img src="/logo.png" alt="Daily Felix" className="w-10 h-10 rounded-xl object-cover" />
                     <div>
                       <h1 className="text-xl font-bold text-foreground">Daily Felix</h1>
                       <p className="text-xs text-muted-foreground">City of the Day · International</p>

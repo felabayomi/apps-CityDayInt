@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Globe, MapPin, Calendar, Heart, Trophy, Activity } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 
 export default function Home() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [savedCityIds, setSavedCityIds] = useState<Set<string>>(new Set());
 
   const { data: todaysCity, isLoading: todaysLoading } = useQuery({
@@ -86,7 +88,7 @@ export default function Home() {
           </div>
         </Card>
         
-        <Card className="p-6">
+        <Card className="p-6 cursor-pointer hover-elevate" onClick={() => setLocation('/library')} data-testid="stat-cities-discovered">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center mr-4">
               <MapPin className="text-secondary" size={24} />
@@ -100,7 +102,7 @@ export default function Home() {
           </div>
         </Card>
         
-        <Card className="p-6">
+        <Card className="p-6 cursor-pointer hover-elevate" onClick={() => setLocation('/library')} data-testid="stat-favorite-cities">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center mr-4">
               <Heart className="text-accent" size={24} />
@@ -114,7 +116,7 @@ export default function Home() {
           </div>
         </Card>
         
-        <Card className="p-6">
+        <Card className="p-6 cursor-pointer hover-elevate" onClick={() => setLocation('/library')} data-testid="stat-travel-plans">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mr-4">
               <Trophy className="text-purple-500" size={24} />

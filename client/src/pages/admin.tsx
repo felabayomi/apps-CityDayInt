@@ -193,6 +193,12 @@ export default function Admin() {
   const [editingScheduled, setEditingScheduled] = useState<{ contentId: string; type: string; title: string; description: string } | null>(null);
   const [editingCityMeta, setEditingCityMeta] = useState<{ name: string; country: string; region: string; funFact: string; publishDate: string } | null>(null);
   const [activeTab, setActiveTab] = useState("scheduler");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const goToManageWithFilter = (filter: string) => {
+    setStatusFilter(filter);
+    setActiveTab("manage");
+  };
 
   const loadCityForEdit = async (city: any) => {
     try {
@@ -269,21 +275,21 @@ export default function Admin() {
         <p className="text-muted-foreground">Create city content, review drafts, and publish.</p>
       </div>
 
-      {/* Stats — real data */}
+      {/* Stats — real data, clickable */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="p-5">
+        <Card className="p-5 cursor-pointer hover-elevate" onClick={() => goToManageWithFilter("all")} data-testid="stat-total-cities">
           <p className="text-2xl font-bold text-foreground">{cities.length}</p>
           <p className="text-sm text-muted-foreground">Total Cities</p>
         </Card>
-        <Card className="p-5">
+        <Card className="p-5 cursor-pointer hover-elevate" onClick={() => goToManageWithFilter("draft")} data-testid="stat-draft-queue">
           <p className="text-2xl font-bold text-amber-500">{drafts.length}</p>
           <p className="text-sm text-muted-foreground">In Draft Queue</p>
         </Card>
-        <Card className="p-5">
+        <Card className="p-5 cursor-pointer hover-elevate" onClick={() => goToManageWithFilter("published")} data-testid="stat-published">
           <p className="text-2xl font-bold text-green-500">{published.length}</p>
           <p className="text-sm text-muted-foreground">Published</p>
         </Card>
-        <Card className="p-5">
+        <Card className="p-5 cursor-pointer hover-elevate" onClick={() => setActiveTab("scheduler")} data-testid="stat-scheduled">
           <p className="text-2xl font-bold text-foreground">{scheduledCount}</p>
           <p className="text-sm text-muted-foreground">Scheduled</p>
         </Card>
@@ -673,9 +679,26 @@ export default function Admin() {
         {/* All Cities Tab */}
         <TabsContent value="manage">
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-foreground">All Cities</h2>
-              <Badge variant="outline">{cities.length} total</Badge>
+            <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-xl font-bold text-foreground">All Cities</h2>
+                {statusFilter !== "all" && (
+                  <Badge
+                    variant="outline"
+                    className={
+                      statusFilter === "published" ? "border-green-300 text-green-600 dark:text-green-400 cursor-pointer" :
+                      statusFilter === "draft" ? "border-amber-300 text-amber-600 dark:text-amber-400 cursor-pointer" :
+                      "cursor-pointer"
+                    }
+                    onClick={() => setStatusFilter("all")}
+                  >
+                    {statusFilter} &times; clear
+                  </Badge>
+                )}
+              </div>
+              <Badge variant="outline">
+                {statusFilter === "all" ? cities.length : cities.filter((c: any) => c.status === statusFilter).length} {statusFilter === "all" ? "total" : `${statusFilter}`}
+              </Badge>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -689,7 +712,7 @@ export default function Admin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {cities.map((city: any) => (
+                  {cities.filter((city: any) => statusFilter === "all" || city.status === statusFilter).map((city: any) => (
                     <tr key={city.id} className="border-b border-border hover:bg-muted/30">
                       <td className="py-3 px-3">
                         <p className="font-medium text-foreground">{city.name}</p>

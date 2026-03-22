@@ -62,12 +62,8 @@ function AppContent() {
               <header className="flex items-center justify-between p-4 border-b border-border bg-card">
                 <div className="flex items-center space-x-4">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <div className="flex items-center space-x-3">
-                    <img src="/logo.png" alt="Daily Felix" className="h-16 w-auto max-w-[260px] object-contain" />
-                    <div>
-                      <h1 className="text-xl font-bold text-foreground">Daily Felix</h1>
-                      <p className="text-xs text-muted-foreground">City of the Day · International</p>
-                    </div>
+                  <div className="flex items-center">
+                    <img src="/logo.png" alt="Daily Felix" className="h-20 w-auto max-w-[320px] object-contain" />
                   </div>
                 </div>
                 

@@ -62,7 +62,7 @@ Format the response as JSON with this exact structure:
 Ensure the tone is enthusiastic yet informative — the kind of content that makes someone want to book a flight immediately.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -74,12 +74,14 @@ Ensure the tone is enthusiastic yet informative — the kind of content that mak
         }
       ],
       response_format: { type: "json_object" },
-      max_completion_tokens: 1500,
+      max_tokens: 1500,
     });
 
-    const content = response.choices[0].message.content;
+    const choice = response.choices[0];
+    console.log(`[OpenAI] finish_reason=${choice.finish_reason} content_length=${choice.message.content?.length ?? 0}`);
+    const content = choice.message.content;
     if (!content) {
-      throw new Error("No content generated from OpenAI");
+      throw new Error(`No content from OpenAI (finish_reason: ${choice.finish_reason})`);
     }
 
     const parsedContent = JSON.parse(content) as CityContentData;
@@ -118,7 +120,7 @@ export async function generateImageUrl(imagePrompt: string): Promise<string> {
 export async function analyzeCityImage(base64Image: string): Promise<string> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025
+      model: "gpt-4o",
       messages: [
         {
           role: "user",
@@ -136,7 +138,7 @@ export async function analyzeCityImage(base64Image: string): Promise<string> {
           ],
         },
       ],
-      max_completion_tokens: 300,
+      max_tokens: 300,
     });
 
     return response.choices[0].message.content || "Unable to analyze image";

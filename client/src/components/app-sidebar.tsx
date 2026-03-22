@@ -1,4 +1,4 @@
-import { Home, Settings, BarChart3, Heart, Archive } from "lucide-react";
+import { Home, Settings, BarChart3, Heart, Archive, MapPin } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Sidebar,
@@ -104,6 +104,27 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Also Explore</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a
+                    href="https://cityoftheday.citydiscoverer.guide/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="nav-usa-cities"
+                  >
+                    <MapPin />
+                    <span>USA Cities</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );

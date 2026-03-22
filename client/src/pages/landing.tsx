@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { CityCards } from "@/components/city-cards";
-import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, Archive, Clock, CheckCircle } from "lucide-react";
+import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, Archive, Clock, CheckCircle, MapPin } from "lucide-react";
 import { useLocation } from "wouter";
 
 // Curated travel/cityscape Unsplash photos — rotate daily as a fallback
@@ -91,6 +91,16 @@ export default function Landing() {
               >
                 <Clock className="w-4 h-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Recent</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('https://cityoftheday.citydiscoverer.guide/', '_blank')}
+                data-testid="button-usa-cities"
+                className="hidden sm:flex items-center gap-1.5"
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                USA Cities
               </Button>
               <Button
                 size="sm"

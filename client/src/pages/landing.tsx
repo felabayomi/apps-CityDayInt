@@ -5,6 +5,43 @@ import { CityCards } from "@/components/city-cards";
 import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, CheckCircle, Archive, Clock } from "lucide-react";
 import { useLocation } from "wouter";
 
+// Curated travel/cityscape Unsplash photos — rotate daily as a fallback
+const TRAVEL_PHOTOS = [
+  'photo-1499856374271-af18a2592df4', // city night lights
+  'photo-1520250497591-112f2f40a3f4', // aerial city
+  'photo-1476514525535-07fb3b4ae5f1', // mountain lake
+  'photo-1506905925346-21bda4d32df4', // alpine landscape
+  'photo-1530789253388-582c481c54b0', // tropical coast
+  'photo-1467269204594-9661b134dd2b', // european city
+  'photo-1533929736458-ca588d08c8be', // rome colosseum
+  'photo-1547981609-4b6bfe67ca0b', // asian city
+  'photo-1538970272646-f61fabb3bfba', // modern skyline
+  'photo-1502602898657-3e91760cbb34', // paris eiffel
+  'photo-1513635269975-59663e0ac1ad', // london eye
+  'photo-1560347876-aeef00ee58a1', // tokyo streets
+  'photo-1534430480872-3498386e7856', // mountain city
+  'photo-1552832230-c0197dd311b5', // rome
+  'photo-1523906834658-6e24ef2386f9', // venice
+];
+
+function getHeroImage(city: any): string {
+  // Try morning content image first (AI-generated cities)
+  const morningImage = city?.content?.find((c: any) => c.type === 'morning')?.imageUrl;
+  if (morningImage && morningImage.startsWith('http')) {
+    return morningImage;
+  }
+  // Fallback: use city name as a Picsum seed — deterministic, beautiful, changes per city
+  if (city?.name) {
+    const seed = encodeURIComponent(city.name.toLowerCase());
+    return `https://picsum.photos/seed/${seed}/1920/800`;
+  }
+  // Ultimate fallback: rotate through curated travel photos by day of year
+  const start = new Date(new Date().getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((Date.now() - start.getTime()) / 86400000);
+  const photo = TRAVEL_PHOTOS[dayOfYear % TRAVEL_PHOTOS.length];
+  return `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=1920&h=800&q=80`;
+}
+
 export default function Landing() {
   const [, setLocation] = useLocation();
 
@@ -64,11 +101,11 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <div 
-        className="relative h-96 bg-cover bg-center"
+      {/* Hero Section — background changes daily with the featured city */}
+      <div
+        className="relative h-96 bg-cover bg-center transition-all duration-1000"
         style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&h=800')"
+          backgroundImage: `url('${getHeroImage(todaysCity)}')`
         }}
       >
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>

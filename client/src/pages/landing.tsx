@@ -74,7 +74,6 @@ export default function Landing() {
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="max-w-2xl text-white">
-            <p className="text-sm font-semibold tracking-widest uppercase text-accent mb-4">City of the Day · International</p>
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               One Iconic City.
               <span className="text-accent"> Every Single Day.</span>

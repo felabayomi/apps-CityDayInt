@@ -75,7 +75,7 @@ Ensure the tone is enthusiastic yet informative — the kind of content that mak
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
-      max_tokens: 1500,
+      max_completion_tokens: 1500,
     });
 
     const content = response.choices[0].message.content;
@@ -137,7 +137,7 @@ export async function analyzeCityImage(base64Image: string): Promise<string> {
           ],
         },
       ],
-      max_tokens: 300,
+      max_completion_tokens: 300,
     });
 
     return response.choices[0].message.content || "Unable to analyze image";

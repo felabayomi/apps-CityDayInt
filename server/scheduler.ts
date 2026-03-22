@@ -242,8 +242,22 @@ export async function autoPublishScheduledCities(): Promise<{ published: string[
 }
 
 export function startScheduler() {
-  // Generate tomorrow's city at 8am EST (13:00 UTC) every day
-  cron.schedule("0 13 * * *", async () => {
+  // On startup: if it's already past 2pm EST and tomorrow has no city, generate one now
+  setTimeout(async () => {
+    const nowUTC = new Date();
+    const hourUTC = nowUTC.getUTCHours();
+    // 19:00 UTC = 2pm EST. If we're past 2pm EST, ensure tomorrow has a city.
+    if (hourUTC >= 19) {
+      console.log("[Scheduler] Startup catch-up: checking if tomorrow needs a city...");
+      const result = await generateTomorrowsCity();
+      console.log(`[Scheduler] Startup catch-up result: ${result.message}`);
+    }
+    // Also run auto-publish in case any scheduled cities are due
+    await autoPublishScheduledCities();
+  }, 3000); // small delay so DB is ready
+
+  // Generate tomorrow's city at 2pm EST (19:00 UTC) every day
+  cron.schedule("0 19 * * *", async () => {
     console.log("[Scheduler] Daily generation job triggered");
     await generateTomorrowsCity();
   }, { timezone: "UTC" });
@@ -254,5 +268,5 @@ export function startScheduler() {
     await autoPublishScheduledCities();
   }, { timezone: "UTC" });
 
-  console.log("[Scheduler] Started — generate at 8am EST, auto-publish at 9am EST");
+  console.log("[Scheduler] Started — generate at 2pm EST, auto-publish at 9am EST next day");
 }

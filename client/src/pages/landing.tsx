@@ -116,39 +116,40 @@ export default function Landing() {
 
       {/* Hero Section — background changes daily with the featured city */}
       <div
-        className="relative h-64 sm:h-80 md:h-96 bg-cover bg-center transition-all duration-1000"
+        className="relative bg-cover bg-center transition-all duration-1000"
         style={{
-          backgroundImage: `url('${getHeroImage(todaysCity)}')`
+          backgroundImage: `url('${getHeroImage(todaysCity)}')`,
+          minHeight: "420px",
         }}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
+        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-28 flex items-center min-h-[420px] md:min-h-[480px]">
           <div className="max-w-2xl text-white">
-            <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold mb-3 sm:mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
               One Iconic City.
               <span className="text-accent"> Every Single Day.</span>
             </h1>
-            <p className="text-base sm:text-xl md:text-2xl mb-4 sm:mb-8 text-gray-200">
+            <p className="text-sm sm:text-xl md:text-2xl mb-6 sm:mb-8 text-gray-200 leading-relaxed">
               AI-curated guides to the world's most popular tourist destinations — landmarks, food, culture, and insider tips, delivered daily.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button 
                 size="lg"
                 onClick={() => window.location.href = 'https://live-loop.live/'}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground text-base"
                 data-testid="button-start-exploring"
               >
-                <Globe className="mr-2" size={20} />
+                <Globe className="mr-2" size={18} />
                 Start Exploring Today
               </Button>
               <Button 
                 size="lg"
                 variant="outline"
-                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border-white/30 px-8 py-4 text-lg"
+                className="bg-white/20 backdrop-blur-sm text-white border-white/40 text-base"
                 onClick={() => window.location.href = 'https://citydiscoverer.ai/subscribe'}
                 data-testid="button-try-premium"
               >
-                <CheckCircle className="mr-2" size={20} />
+                <CheckCircle className="mr-2" size={18} />
                 Try Premium
               </Button>
             </div>

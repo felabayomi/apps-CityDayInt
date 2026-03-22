@@ -1,0 +1,255 @@
+What you’re trying to do is actually very good — you want **Word of the Day** and **City of the Day** to run automatically like **Expedition**, but still keep their original structure of **one post per day**. That’s the right approach.
+
+Right now your instructions are written for **50 states + multiple posts**, which doesn’t fit those apps. So we need to **convert the system spec** so it works for:
+
+* Word of the Day → 1 word per day
+* City of the Day → 1 city per day
+* Expedition → travel/state articles
+* Same architecture, different content model
+
+---
+
+# The Big Idea
+
+You are not building separate apps.
+
+You are building **one publishing engine** that can generate:
+
+* Word posts
+* City posts
+* State travel posts
+* Restaurants
+* Real estate
+* Sports
+* Anything later
+
+The only thing that changes is:
+
+> What is the “daily item” and what the AI prompt generates.
+
+Everything else stays the same:
+
+* AI generates content
+* Goes into Drafts
+* You approve
+* Then it publishes
+* Archive page
+* Admin panel
+* Public site
+
+---
+
+# Convert Your System Spec Like This
+
+## Universal Daily Publishing System
+
+### The Stack
+
+* Frontend: React + TypeScript + Tailwind + Shadcn
+* Backend: Node.js + Express
+* Database: PostgreSQL
+* AI: OpenAI
+* Search: Brave Search (for live info when needed)
+* Storage: Images stored in database
+
+This stack works for **all your apps**.
+
+---
+
+# Content Model (This Is The Important Change)
+
+Instead of:
+
+> One article per state per day
+
+Change the system to:
+
+## One Item Per Day Publishing Model
+
+The system publishes **one item per day**, where the item type depends on the site:
+
+| Site            | Daily Item          |
+| --------------- | ------------------- |
+| Word of the Day | Word                |
+| City of the Day | City                |
+| Expedition      | State / Destination |
+| Restaurant app  | Restaurant          |
+| Real estate     | Property            |
+| Sports          | Team / Game         |
+
+So now the system is **generic**.
+
+---
+
+# Database Structure Should Look Like This
+
+Instead of only “states”, use something like:
+
+## Table: posts
+
+```id="sgu9km"
+id
+title
+slug
+content_markdown
+summary
+highlights (json)
+sources (json)
+image
+category
+item_name (word / city / state / restaurant)
+publish_date
+status (draft / published)
+created_at
+updated_at
+```
+
+Now the same system works for everything.
+
+---
+
+# AI Generation Pipeline (Universal Version)
+
+## Auto-Generation Workflow
+
+When you click **Generate**, the system:
+
+1. Picks the next item (word, city, state, etc.)
+2. Searches the web (if needed)
+3. Builds a prompt with:
+
+   * Item name
+   * Category
+   * Style
+   * Research
+4. Sends prompt to OpenAI
+5. OpenAI returns structured JSON:
+
+   * Title
+   * Summary
+   * Article body (markdown)
+   * Highlights
+   * Sources
+6. Saves as **Draft**
+7. You review in Admin
+8. You publish
+9. Appears on site
+
+This should be the **same for all apps**.
+
+---
+
+# Editorial Workflow (Keep This Exactly)
+
+This part you already designed well:
+
+## Editorial Firewall
+
+* AI writes
+* Draft goes to Draft Queue
+* You edit
+* You approve
+* Only then it publishes
+* You can edit published posts later
+
+This is very important. Keep this system.
+
+---
+
+# Public Site Structure (Same For All Apps)
+
+## Public Frontend
+
+Each site should have:
+
+1. Home page → Today’s post
+2. Archive page → Calendar view
+3. Individual post page
+4. Category filters
+5. Search
+6. Admin hidden panel
+7. Banner / CTA at bottom (Schedez, etc.)
+
+This structure works for:
+
+* Word of the Day
+* City of the Day
+* Expedition
+* Future sites
+
+---
+
+# Admin Panel Should Control Everything
+
+Admin panel features:
+
+* Generate new post
+* Generate next item automatically
+* Draft queue
+* Edit article
+* Upload image
+* Publish
+* Unpublish
+* Regenerate summary
+* Regenerate highlights
+* Archive
+* Schedule future posts
+
+This is basically a **CMS + AI generator**.
+
+---
+
+# The Correct Universal Concept
+
+You are basically building this:
+
+## AI Daily Publishing Platform
+
+Where each site is just:
+
+* Different category
+* Different prompt
+* Different items list
+* Same engine
+
+---
+
+# So Rewrite Your System Spec Like This
+
+## Universal AI Daily Publishing Architecture
+
+**Content Model**
+The platform is built around a “one item per day” publishing model. Each site defines what the daily item is (word, city, state, restaurant, etc.). The system generates one article per item per day using AI and live research, saves it as a draft, and requires admin approval before publishing.
+
+**AI Pipeline**
+When content is generated, the server performs live web research, builds a structured prompt, and sends it to OpenAI. The AI returns a structured JSON object containing title, summary, article body in markdown, highlights, and sources. This is saved as a draft in the database.
+
+**Editorial Workflow**
+All AI-generated content goes into a Draft queue. Nothing is published automatically. The admin reviews, edits, adds images, and approves content before it goes live.
+
+**Public Site**
+The public site shows the daily post, archive calendar, category filters, and individual article pages.
+
+**Admin Panel**
+The admin panel allows generating content, editing drafts, uploading images, publishing articles, and managing archives.
+
+**Storage**
+Images are stored directly in the database so they persist across deployments.
+
+---
+
+# What You Are Actually Building (Important)
+
+You are not building:
+
+* Word of the Day
+* City of the Day
+* Expedition
+
+You are building:
+
+## A reusable AI publishing engine for daily content sites.
+
+Each site is just a **different theme using the same engine**.
+
+That’s actually a very smart architecture if you build it right.

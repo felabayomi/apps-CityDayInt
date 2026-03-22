@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Library from "@/pages/library";
+import Archive from "@/pages/archive";
+import CityPage from "@/pages/city";
 import Admin from "@/pages/admin";
 import Analytics from "@/pages/analytics";
 import NotFound from "@/pages/not-found";
@@ -29,6 +31,8 @@ function Router() {
           ) : (
             <Route path="/" component={Home} />
           )}
+          <Route path="/archive" component={Archive} />
+          <Route path="/city/:id" component={CityPage} />
           {isAuthenticated && <Route path="/library" component={Library} />}
           {isAuthenticated && <Route path="/admin" component={Admin} />}
           {isAuthenticated && <Route path="/analytics" component={Analytics} />}

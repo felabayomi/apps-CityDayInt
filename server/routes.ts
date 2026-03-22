@@ -40,7 +40,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get recent cities (limited for free users)
+  // Public archive - all published cities
+  app.get('/api/cities/archive', async (req, res) => {
+    try {
+      const allCities = await storage.getAllCities();
+      const published = allCities.filter((c: any) => c.status === 'published');
+      res.json(published);
+    } catch (error) {
+      console.error("Error fetching archive:", error);
+      res.status(500).json({ message: "Failed to fetch archive" });
+    }
+  });
+
+  // Get recent cities (limited for free users) - must be before /:cityId
   app.get('/api/cities/recent', async (req: any, res) => {
     try {
       let limit = 5; // Default for non-authenticated users
@@ -74,6 +86,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching recent cities:", error);
       res.status(500).json({ message: "Failed to fetch recent cities" });
+    }
+  });
+
+  // Individual city by ID (public) - must come after named routes like /recent, /archive
+  app.get('/api/cities/:cityId', async (req, res) => {
+    try {
+      const { cityId } = req.params;
+      const city = await storage.getCityById(cityId);
+      if (!city || city.status !== 'published') {
+        return res.status(404).json({ message: "City not found" });
+      }
+      const content = await storage.getCityContent(city.id);
+      res.json({ ...city, content });
+    } catch (error) {
+      console.error("Error fetching city:", error);
+      res.status(500).json({ message: "Failed to fetch city" });
     }
   });
 

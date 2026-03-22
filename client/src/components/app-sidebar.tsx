@@ -1,4 +1,4 @@
-import { Calendar, Home, Settings, BarChart3, MapPin, Heart, PlusCircle } from "lucide-react";
+import { Home, Settings, BarChart3, Heart, Archive } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Sidebar,
@@ -19,19 +19,14 @@ const navigation = [
     icon: Home,
   },
   {
-    title: "Today's City",
-    url: "/",
-    icon: MapPin,
+    title: "Archive",
+    url: "/archive",
+    icon: Archive,
   },
   {
     title: "Saved Cities",
     url: "/library",
     icon: Heart,
-  },
-  {
-    title: "Travel Plans", 
-    url: "/plans",
-    icon: Calendar,
   },
 ];
 
@@ -43,20 +38,15 @@ const adminNavigation = [
   },
   {
     title: "Analytics",
-    url: "/analytics", 
+    url: "/analytics",
     icon: BarChart3,
-  },
-  {
-    title: "Add City",
-    url: "/admin/new",
-    icon: PlusCircle,
   },
 ];
 
 export function AppSidebar() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
-  
+
   const isAdmin = user?.email?.includes('admin') || user?.email === 'wordofday2025@gmail.com';
 
   return (
@@ -68,7 +58,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {navigation.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
+                  <SidebarMenuButton
                     asChild
                     isActive={location === item.url}
                     data-testid={`nav-${item.title.toLowerCase().replace(' ', '-')}`}
@@ -91,7 +81,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 {adminNavigation.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
+                    <SidebarMenuButton
                       asChild
                       isActive={location === item.url}
                       data-testid={`nav-admin-${item.title.toLowerCase().replace(' ', '-')}`}

@@ -91,9 +91,9 @@ function CityContentCard({ content, cityName }: { content: CityContent; cityName
   const styles = getCardStyles(content.type);
   
   return (
-    <Card className={`p-6 ${styles.gradient} ${styles.border} card-hover`}>
-      <div className="flex items-center mb-4">
-        <div className={`w-12 h-12 ${styles.iconBg} rounded-xl flex items-center justify-center mr-4`}>
+    <Card className={`p-4 sm:p-6 ${styles.gradient} ${styles.border} card-hover`}>
+      <div className="flex items-center mb-3 sm:mb-4">
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 ${styles.iconBg} rounded-xl flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0`}>
           <i className={`${styles.icon} text-white text-lg`}></i>
         </div>
         <div>
@@ -241,39 +241,39 @@ export function CityCards({ city, onSaveToggle, isUserSaved = false }: CityCards
   return (
     <div className="space-y-8">
       {/* City Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center space-x-2 bg-accent/10 px-4 py-2 rounded-full mb-4">
+      <div className="text-center mb-5 sm:mb-8">
+        <div className="inline-flex items-center space-x-2 bg-accent/10 px-3 py-1.5 rounded-full mb-3">
           <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
-          <span className="text-accent-foreground font-semibold">Today's Discovery</span>
+          <span className="text-accent-foreground font-semibold text-sm">Today's Discovery</span>
         </div>
-        <h2 className="text-4xl font-bold text-foreground mb-4 flex items-center justify-center gap-3">
+        <h2 className="text-2xl sm:text-4xl font-bold text-foreground mb-3 flex items-center justify-center gap-2">
           Welcome to {city.name} {city.flag}
         </h2>
-        <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-4">
+        <div className="flex items-center justify-center flex-wrap gap-3 text-xs sm:text-sm text-muted-foreground mb-3">
           <div className="flex items-center gap-1">
-            <Eye className="w-4 h-4" />
+            <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
             {city.views || 0} views
           </div>
           <div className="flex items-center gap-1">
-            <Heart className="w-4 h-4" />
+            <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
             {city.saves || 0} saves
           </div>
           <div className="flex items-center gap-1">
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-3 h-3 sm:w-4 sm:h-4" />
             {city.shares || 0} shares
           </div>
           <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
+            <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
             {new Date(city.publishDate).toLocaleDateString()}
           </div>
         </div>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+        <p className="text-sm sm:text-xl text-muted-foreground max-w-3xl mx-auto">
           Discover the beauty and culture of {city.country}
         </p>
       </div>
 
       {/* Three-Card System */}
-      <div className="grid md:grid-cols-3 gap-8 mb-8">
+      <div className="grid md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-5 sm:mb-8">
         {morningContent && <CityContentCard content={morningContent} cityName={city.name} />}
         {afternoonContent && <CityContentCard content={afternoonContent} cityName={city.name} />}
         {eveningContent && <CityContentCard content={eveningContent} cityName={city.name} />}

@@ -60,27 +60,27 @@ function AppContent() {
           <div className="flex h-screen w-full">
             <AppSidebar />
             <div className="flex flex-col flex-1">
-              <header className="flex items-center justify-between p-4 border-b border-border bg-card">
-                <div className="flex items-center space-x-4">
+              <header className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 border-b border-border bg-card">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <div className="flex items-center space-x-3">
-                    <img src="/logo.png" alt="Daily Felix" className="h-32 w-auto object-contain" />
-                    <div>
-                      <h1 className="text-xl font-bold text-foreground">Daily Felix</h1>
-                      <p className="text-xs text-muted-foreground">City of the Day · International</p>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <img src="/logo.png" alt="Daily Felix" className="h-10 sm:h-12 w-auto object-contain flex-shrink-0" />
+                    <div className="min-w-0">
+                      <h1 className="text-base sm:text-lg font-bold text-foreground leading-tight">Daily Felix</h1>
+                      <p className="text-xs text-muted-foreground hidden sm:block">City of the Day · International</p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <NotificationBanner />
-                  <div className="hidden sm:flex items-center space-x-2 bg-accent/10 px-3 py-1 rounded-full">
+                  <div className="hidden md:flex items-center space-x-2 bg-accent/10 px-3 py-1 rounded-full">
                     <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
                     <span className="text-sm font-medium text-accent-foreground">Premium Active</span>
                   </div>
                   <button 
                     onClick={() => window.location.href = '/api/logout'}
-                    className="text-sm text-muted-foreground hover:text-foreground"
+                    className="text-xs sm:text-sm text-muted-foreground hover:text-foreground whitespace-nowrap"
                   >
                     Logout
                   </button>

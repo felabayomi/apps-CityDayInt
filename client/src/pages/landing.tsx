@@ -74,23 +74,28 @@ export default function Landing() {
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={() => setLocation('/archive')}
                 data-testid="button-nav-archive"
+                className="hidden sm:flex"
               >
-                <Archive className="w-4 h-4 mr-2" />
-                Archive
+                <Archive className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Archive</span>
               </Button>
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={() => {
                   document.getElementById('recent-cities')?.scrollIntoView({ behavior: 'smooth' });
                 }}
                 data-testid="button-nav-recent"
+                className="hidden sm:flex"
               >
-                <Clock className="w-4 h-4 mr-2" />
-                Recent
+                <Clock className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Recent</span>
               </Button>
               <Button
+                size="sm"
                 onClick={() => window.location.href = 'https://schedez.io/'}
                 data-testid="button-login"
               >
@@ -103,7 +108,7 @@ export default function Landing() {
 
       {/* Hero Section — background changes daily with the featured city */}
       <div
-        className="relative h-96 bg-cover bg-center transition-all duration-1000"
+        className="relative h-64 sm:h-80 md:h-96 bg-cover bg-center transition-all duration-1000"
         style={{
           backgroundImage: `url('${getHeroImage(todaysCity)}')`
         }}
@@ -111,11 +116,11 @@ export default function Landing() {
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="max-w-2xl text-white">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold mb-3 sm:mb-6">
               One Iconic City.
               <span className="text-accent"> Every Single Day.</span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-gray-200">
+            <p className="text-base sm:text-xl md:text-2xl mb-4 sm:mb-8 text-gray-200">
               AI-curated guides to the world's most popular tourist destinations — landmarks, food, culture, and insider tips, delivered daily.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -172,12 +177,12 @@ export default function Landing() {
       {recentCities.length > 1 && (
         <section id="recent-cities" className="py-16 bg-background">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-8 sm:mb-10">
               <div>
-                <h2 className="text-3xl font-bold text-foreground mb-1">Recent Cities</h2>
-                <p className="text-muted-foreground">Past destinations from the Daily Felix collection</p>
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">Recent Cities</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">Past destinations from the Daily Felix collection</p>
               </div>
-              <Button variant="outline" onClick={() => setLocation('/archive')} data-testid="button-view-archive">
+              <Button variant="outline" size="sm" onClick={() => setLocation('/archive')} data-testid="button-view-archive">
                 <Archive className="w-4 h-4 mr-2" />
                 Full Archive
               </Button>
@@ -212,60 +217,60 @@ export default function Landing() {
       {/* Features Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Why Daily Felix International?</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <div className="text-center mb-8 sm:mb-16">
+            <h2 className="text-2xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">Why Daily Felix International?</h2>
+            <p className="text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto">
               One world-famous city, every day — curated by AI, focused on the destinations that matter most to international travelers
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="p-8 card-hover text-center">
-              <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Globe className="text-white" size={32} />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+            <Card className="p-5 sm:p-8 card-hover text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Globe className="text-white" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-4">AI-Powered International Curation</h3>
-              <p className="text-muted-foreground">Our AI selects the world's most iconic tourist destinations daily — from Paris to Tokyo, Rome to Rio.</p>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-4">AI-Powered International Curation</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Our AI selects the world's most iconic tourist destinations daily — from Paris to Tokyo, Rome to Rio.</p>
             </Card>
 
-            <Card className="p-8 card-hover text-center">
-              <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Calendar className="text-white" size={32} />
+            <Card className="p-5 sm:p-8 card-hover text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-secondary rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Calendar className="text-white" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-4">A New City Every Day</h3>
-              <p className="text-muted-foreground">Wake up to a new international destination every morning — landmarks, local food, culture, and smart budget tips.</p>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-4">A New City Every Day</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Wake up to a new international destination every morning — landmarks, local food, culture, and smart budget tips.</p>
             </Card>
 
-            <Card className="p-8 card-hover text-center">
-              <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Smartphone className="text-white" size={32} />
+            <Card className="p-5 sm:p-8 card-hover text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Smartphone className="text-white" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-4">PWA Ready</h3>
-              <p className="text-muted-foreground">Install on your phone or desktop. Works offline and syncs across all your devices.</p>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-4">PWA Ready</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Install on your phone or desktop. Works offline and syncs across all your devices.</p>
             </Card>
 
-            <Card className="p-8 card-hover text-center">
-              <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Heart className="text-white" size={32} />
+            <Card className="p-5 sm:p-8 card-hover text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Heart className="text-white" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-4">Your World Travel Journal</h3>
-              <p className="text-muted-foreground">Save your favourite international cities, revisit past destinations, and build a digital travel wishlist.</p>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-4">Your World Travel Journal</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Save your favourite international cities, revisit past destinations, and build a digital travel wishlist.</p>
             </Card>
 
-            <Card className="p-8 card-hover text-center">
-              <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <DollarSign className="text-white" size={32} />
+            <Card className="p-5 sm:p-8 card-hover text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <DollarSign className="text-white" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-4">International Budget Tips</h3>
-              <p className="text-muted-foreground">Every city comes with insider tips on how to travel smarter — best time to visit, local hacks, and money-saving strategies.</p>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-4">International Budget Tips</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Every city comes with insider tips on how to travel smarter — best time to visit, local hacks, and money-saving strategies.</p>
             </Card>
 
-            <Card className="p-8 card-hover text-center">
-              <div className="w-16 h-16 bg-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Users className="text-white" size={32} />
+            <Card className="p-5 sm:p-8 card-hover text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Users className="text-white" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-4">Global Traveler Community</h3>
-              <p className="text-muted-foreground">Join thousands of international travel enthusiasts discovering and saving their favourite cities every day.</p>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-4">Global Traveler Community</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Join thousands of international travel enthusiasts discovering and saving their favourite cities every day.</p>
             </Card>
           </div>
         </div>

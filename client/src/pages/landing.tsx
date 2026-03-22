@@ -2,11 +2,19 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { CityCards } from "@/components/city-cards";
-import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, CheckCircle } from "lucide-react";
+import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, CheckCircle, Archive, Clock } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+
   const { data: todaysCity, isLoading } = useQuery({
     queryKey: ['/api/cities/today'],
+    retry: false,
+  });
+
+  const { data: recentCities = [] } = useQuery<any[]>({
+    queryKey: ['/api/cities/recent'],
     retry: false,
   });
 
@@ -26,10 +34,27 @@ export default function Landing() {
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setLocation('/archive')}
+                data-testid="button-nav-archive"
+              >
+                <Archive className="w-4 h-4 mr-2" />
+                Archive
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  document.getElementById('recent-cities')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                data-testid="button-nav-recent"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                Recent
+              </Button>
               <Button
                 onClick={() => window.location.href = '/api/login'}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 data-testid="button-login"
               >
                 Get Started
@@ -89,7 +114,7 @@ export default function Landing() {
               <p className="mt-4 text-muted-foreground">Loading today's city...</p>
             </div>
           ) : todaysCity ? (
-            <CityCards city={todaysCity} savedCityIds={new Set()} onSaveToggle={() => {}} />
+            <CityCards city={todaysCity} isUserSaved={false} onSaveToggle={() => {}} />
           ) : (
             <div className="text-center py-12">
               <Globe className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -99,6 +124,47 @@ export default function Landing() {
           )}
         </div>
       </section>
+
+      {/* Recent Cities Section */}
+      {recentCities.length > 1 && (
+        <section id="recent-cities" className="py-16 bg-background">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <h2 className="text-3xl font-bold text-foreground mb-1">Recent Cities</h2>
+                <p className="text-muted-foreground">Past destinations from the Daily Felix collection</p>
+              </div>
+              <Button variant="outline" onClick={() => setLocation('/archive')} data-testid="button-view-archive">
+                <Archive className="w-4 h-4 mr-2" />
+                Full Archive
+              </Button>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentCities.slice(0, 6).map((city: any) => (
+                <Card
+                  key={city.id}
+                  className="p-5 hover-elevate cursor-pointer"
+                  onClick={() => setLocation(`/city/${city.id}`)}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <h3 className="font-bold text-foreground">{city.name}</h3>
+                      <p className="text-sm text-muted-foreground">{city.country}</p>
+                    </div>
+                    {city.flag && <span className="text-2xl">{city.flag}</span>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(city.publishDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                  {city.funFact && (
+                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2 italic">"{city.funFact}"</p>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Features Section */}
       <section className="py-16 bg-muted/30">

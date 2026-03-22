@@ -39,7 +39,7 @@ export function NotificationBanner() {
 
   if (!mounted || !isSupported) return null;
 
-  // Show a small toggle button in header when already subscribed
+  // Already subscribed — show active bell icon
   if (isSubscribed) {
     return (
       <Button
@@ -55,7 +55,7 @@ export function NotificationBanner() {
     );
   }
 
-  // Don't show banner if dismissed or already granted/denied
+  // Denied or dismissed — show muted bell icon only (no banner)
   if (dismissed || permission === "denied") {
     return (
       <Button
@@ -71,12 +71,25 @@ export function NotificationBanner() {
     );
   }
 
-  // Show prompt banner if not yet decided
-  if (permission === "default" && !dismissed) {
-    return (
-      <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-md px-3 py-1.5">
+  // Default — show compact bell icon on mobile, full prompt on desktop
+  return (
+    <>
+      {/* Mobile: just a bell icon button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleSubscribe}
+        disabled={isLoading}
+        title="Get notified when today's city goes live"
+        className="sm:hidden text-muted-foreground"
+      >
+        <Bell className="w-4 h-4" />
+      </Button>
+
+      {/* Desktop: full prompt banner */}
+      <div className="hidden sm:flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-md px-3 py-1.5">
         <Bell className="w-4 h-4 text-primary flex-shrink-0" />
-        <span className="text-xs text-foreground hidden sm:inline">
+        <span className="text-xs text-foreground">
           Get notified when each day's city goes live
         </span>
         <Button
@@ -96,8 +109,6 @@ export function NotificationBanner() {
           <X className="w-3 h-3" />
         </button>
       </div>
-    );
-  }
-
-  return null;
+    </>
+  );
 }

@@ -61,13 +61,11 @@ export default function Landing() {
       <nav className="bg-card shadow-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
-                <Globe className="text-white" size={20} />
-              </div>
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="Daily Felix" className="h-10 w-auto object-contain flex-shrink-0" />
               <div>
-                <h1 className="text-xl font-bold text-foreground">Daily Felix</h1>
-                <p className="text-xs text-muted-foreground">City of the Day · International</p>
+                <h1 className="text-base sm:text-xl font-bold text-foreground leading-tight">Daily Felix</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">City of the Day · International</p>
               </div>
             </div>
             

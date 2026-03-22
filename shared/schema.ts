@@ -104,6 +104,22 @@ export const travelPlanCities = pgTable("travel_plan_cities", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Push notification subscriptions
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// App-wide settings (for storing VAPID keys, etc.)
+export const appSettings = pgTable("app_settings", {
+  key: varchar("key").primaryKey(),
+  value: text("value").notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   savedCities: many(userSavedCities),

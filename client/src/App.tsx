@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { NotificationBanner } from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
@@ -71,7 +72,8 @@ function AppContent() {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-3">
+                  <NotificationBanner />
                   <div className="hidden sm:flex items-center space-x-2 bg-accent/10 px-3 py-1 rounded-full">
                     <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
                     <span className="text-sm font-medium text-accent-foreground">Premium Active</span>

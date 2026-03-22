@@ -4,11 +4,12 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateCityContent, generateImageUrl } from "./openai";
 import { generateTomorrowsCity, autoPublishScheduledCities } from "./scheduler";
-import { insertCitySchema, insertCityContentSchema, insertTravelPlanSchema } from "@shared/schema";
+import { insertCitySchema, insertCityContentSchema, insertTravelPlanSchema, pushSubscriptions } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { cities } from "@shared/schema";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
+import { getVapidPublicKey, initVapid } from "./webpush";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -510,6 +511,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching revenue analytics:", error);
       res.status(500).json({ message: "Failed to fetch revenue analytics" });
+    }
+  });
+
+  // ── Push Notification Routes ──────────────────────────────────────────────
+
+  // Get the VAPID public key (needed by browser to subscribe)
+  app.get("/api/push/vapid-key", async (_req, res) => {
+    try {
+      await initVapid();
+      const key = await getVapidPublicKey();
+      if (!key) return res.status(503).json({ message: "Push not available yet" });
+      res.json({ publicKey: key });
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to get VAPID key" });
+    }
+  });
+
+  // Save a push subscription (user opts in)
+  app.post("/api/push/subscribe", isAuthenticated, async (req: any, res) => {
+    try {
+      const { endpoint, keys } = req.body;
+      if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        return res.status(400).json({ message: "Invalid subscription data" });
+      }
+      const userId = req.user.claims.sub;
+      await db
+        .insert(pushSubscriptions)
+        .values({ userId, endpoint, p256dh: keys.p256dh, auth: keys.auth })
+        .onConflictDoUpdate({
+          target: pushSubscriptions.endpoint,
+          set: { userId, p256dh: keys.p256dh, auth: keys.auth },
+        });
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("Push subscribe error:", err.message);
+      res.status(500).json({ message: "Failed to save subscription" });
+    }
+  });
+
+  // Remove a push subscription (user opts out)
+  app.post("/api/push/unsubscribe", isAuthenticated, async (req: any, res) => {
+    try {
+      const { endpoint } = req.body;
+      if (!endpoint) return res.status(400).json({ message: "Missing endpoint" });
+      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to remove subscription" });
     }
   });
 

@@ -4,6 +4,7 @@ import { generateCityContent } from "./openai";
 import { db } from "./db";
 import { cities } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
+import { sendPushToAll, initVapid } from "./webpush";
 
 // 100+ popular international tourist destinations to rotate through
 const DESTINATION_POOL = [
@@ -224,16 +225,31 @@ export async function autoPublishScheduledCities(): Promise<{ published: string[
     const now = new Date();
     console.log(`[Scheduler] Running auto-publish check at ${now.toISOString()}`);
 
-    const [updated] = await db
+    const published = await db
       .update(cities)
       .set({ status: "published", updatedAt: now })
       .where(
         sql`${cities.status} = 'scheduled' AND ${cities.publishDate} <= ${now}`
       )
-      .returning({ name: cities.name });
+      .returning({ name: cities.name, country: cities.country });
 
-    const publishedNames = updated ? [updated.name] : [];
+    const publishedNames = published.map((c) => c.name);
     console.log(`[Scheduler] Auto-published: ${publishedNames.join(", ") || "none"}`);
+
+    // Send push notification for each newly published city
+    for (const city of published) {
+      try {
+        await sendPushToAll({
+          title: "Today's city is live!",
+          body: `Explore ${city.name}, ${city.country} — your daily travel inspiration is ready.`,
+          url: "/",
+        });
+        console.log(`[Scheduler] Push sent for ${city.name}`);
+      } catch (pushErr: any) {
+        console.error("[Scheduler] Push notification failed:", pushErr.message);
+      }
+    }
+
     return { published: publishedNames };
   } catch (error: any) {
     console.error("[Scheduler] Auto-publish failed:", error.message);
@@ -242,8 +258,9 @@ export async function autoPublishScheduledCities(): Promise<{ published: string[
 }
 
 export function startScheduler() {
-  // On startup: always check if tomorrow needs a city and if any cities need publishing
+  // On startup: initialize VAPID keys, check if tomorrow needs a city, and publish any due cities
   setTimeout(async () => {
+    await initVapid();
     console.log("[Scheduler] Startup check: ensuring tomorrow has a city...");
     const result = await generateTomorrowsCity();
     console.log(`[Scheduler] Startup check result: ${result.message}`);
@@ -261,6 +278,23 @@ export function startScheduler() {
   cron.schedule("0 14 * * *", async () => {
     console.log("[Scheduler] Daily auto-publish job triggered");
     await autoPublishScheduledCities();
+  }, { timezone: "UTC" });
+
+  // Evening reminder at 7pm EST (00:00 UTC next day) — remind users to read today's city
+  cron.schedule("0 0 * * *", async () => {
+    console.log("[Scheduler] Evening reminder push triggered");
+    try {
+      const todayCity = await storage.getTodaysCity();
+      if (todayCity) {
+        await sendPushToAll({
+          title: "Don't miss today's city!",
+          body: `Have you explored ${todayCity.name}, ${todayCity.country} yet? A new city takes over tomorrow.`,
+          url: "/",
+        });
+      }
+    } catch (err: any) {
+      console.error("[Scheduler] Evening reminder push failed:", err.message);
+    }
   }, { timezone: "UTC" });
 
   console.log("[Scheduler] Started — generate at 3pm EST, auto-publish at 9am EST next day");

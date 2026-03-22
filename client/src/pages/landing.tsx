@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { CityCards } from "@/components/city-cards";
-import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, Archive, Clock } from "lucide-react";
+import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, Archive, Clock, CheckCircle } from "lucide-react";
 import { useLocation } from "wouter";
 
 // Curated travel/cityscape Unsplash photos — rotate daily as a fallback

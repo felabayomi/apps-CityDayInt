@@ -54,7 +54,7 @@ export default function Landing() {
                 Recent
               </Button>
               <Button
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => window.location.href = 'https://schedez.io/'}
                 data-testid="button-login"
               >
                 Get Started
@@ -85,7 +85,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button 
                 size="lg"
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => window.location.href = 'https://schedez.io/'}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg"
                 data-testid="button-start-exploring"
               >
@@ -275,7 +275,7 @@ export default function Landing() {
               
               <Button 
                 className="w-full bg-muted hover:bg-muted/80 text-foreground"
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => window.location.href = 'https://schedez.io/'}
                 data-testid="button-free-plan"
               >
                 Start Free
@@ -326,7 +326,7 @@ export default function Landing() {
               
               <Button 
                 className="w-full gradient-bg text-white hover:opacity-90"
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => window.location.href = 'https://schedez.io/'}
                 data-testid="button-premium-plan"
               >
                 Start 7-Day Free Trial

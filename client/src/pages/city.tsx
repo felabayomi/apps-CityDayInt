@@ -84,7 +84,7 @@ export default function CityPage() {
         <Card className="mt-8 p-6 text-center bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
           <h3 className="text-lg font-bold text-foreground mb-2">Want daily travel inspiration?</h3>
           <p className="text-muted-foreground mb-4">Sign up to save cities, access the full archive, and get a new city every day.</p>
-          <Button onClick={() => window.location.href = '/api/login'}>
+          <Button onClick={() => window.location.href = 'https://schedez.io/'}>
             Get Started Free
           </Button>
         </Card>

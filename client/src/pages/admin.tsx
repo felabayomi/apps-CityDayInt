@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
   Globe, Wand2, Eye, Edit, Save, Calendar, Sun, Utensils, Moon,
-  CheckCircle, Clock, BookOpen, Send
+  CheckCircle, Clock, BookOpen, Send, Zap, RefreshCw, CalendarCheck
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
@@ -64,6 +64,12 @@ export default function Admin() {
   const { data: cities = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/cities'],
     enabled: isAdmin(user?.email),
+  });
+
+  const { data: schedulerStatus, isLoading: schedulerLoading, refetch: refetchScheduler } = useQuery<any>({
+    queryKey: ['/api/admin/scheduler/status'],
+    enabled: isAdmin(user?.email),
+    refetchInterval: 30000,
   });
 
   const drafts = cities.filter((c: any) => c.status === 'draft' || c.status === 'ready');
@@ -156,6 +162,35 @@ export default function Admin() {
   const handleSaveContent = (contentId: string, data: any) => {
     updateContentMutation.mutate({ contentId, data });
   };
+
+  const generateTomorrowMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/admin/scheduler/generate', {});
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/cities'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scheduler/status'] });
+      toast({ title: data.success ? "Generated" : "Skipped", description: data.message });
+    },
+    onError: (e: Error) => toast({ title: "Generation Failed", description: e.message, variant: "destructive" }),
+  });
+
+  const approveScheduledMutation = useMutation({
+    mutationFn: async (cityId: string) => {
+      const res = await apiRequest('POST', `/api/admin/cities/${cityId}/approve`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/cities'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scheduler/status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cities/today'] });
+      toast({ title: "Published", description: "City is now live on the site." });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const [editingScheduled, setEditingScheduled] = useState<{ contentId: string; type: string; title: string; description: string } | null>(null);
 
   const currentTab = contentTabs.find((t) => t.type === activeContentTab);
 
@@ -264,12 +299,206 @@ export default function Admin() {
         </Card>
       )}
 
-      <Tabs defaultValue="create" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="scheduler" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="scheduler">
+            <CalendarCheck className="w-3 h-3 mr-1" />
+            Scheduler
+          </TabsTrigger>
           <TabsTrigger value="create">Create City</TabsTrigger>
           <TabsTrigger value="manage">All Cities</TabsTrigger>
           <TabsTrigger value="content" disabled={contentTabs.length === 0}>Edit Content</TabsTrigger>
         </TabsList>
+
+        {/* Scheduler Tab */}
+        <TabsContent value="scheduler">
+          <div className="space-y-6">
+            {/* Status banner */}
+            <Card className="p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Zap className="w-5 h-5 text-primary" />
+                    <h2 className="text-lg font-bold text-foreground">Auto-Scheduler</h2>
+                    <Badge variant="outline" className="text-green-600 border-green-300">Active</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Generates tomorrow's city at <strong>8am EST</strong> · Auto-publishes at <strong>9am EST</strong> if not manually approved
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchScheduler()}
+                  data-testid="button-refresh-scheduler"
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Refresh
+                </Button>
+              </div>
+
+              {/* Tomorrow's city */}
+              {schedulerLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                </div>
+              ) : schedulerStatus?.scheduled ? (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-muted/40 rounded-md">
+                    <div className="flex items-center gap-3">
+                      <div className="text-3xl">{schedulerStatus.city.flag || "🌍"}</div>
+                      <div>
+                        <p className="font-semibold text-foreground text-lg">
+                          {schedulerStatus.city.name}, {schedulerStatus.city.country}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {schedulerStatus.city.region} · Publish: {new Date(schedulerStatus.city.publishDate).toLocaleString("en-US", { timeZone: "America/New_York", dateStyle: "full", timeStyle: "short" })} EST
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => generateTomorrowMutation.mutate()}
+                        disabled={generateTomorrowMutation.isPending}
+                        data-testid="button-regenerate-tomorrow"
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Regenerate
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => approveScheduledMutation.mutate(schedulerStatus.city.id)}
+                        disabled={approveScheduledMutation.isPending || schedulerStatus.city.status === 'published'}
+                        data-testid="button-approve-scheduled"
+                      >
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        {schedulerStatus.city.status === 'published' ? 'Already Published' : 'Approve Now'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Content preview + inline edit */}
+                  {schedulerStatus.city.content?.length > 0 && (
+                    <div className="grid md:grid-cols-3 gap-4">
+                      {schedulerStatus.city.content.map((card: any) => (
+                        <Card key={card.id} className="p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            {card.type === 'morning' && <Sun className="w-4 h-4 text-amber-500" />}
+                            {card.type === 'afternoon' && <Utensils className="w-4 h-4 text-orange-500" />}
+                            {card.type === 'evening' && <Moon className="w-4 h-4 text-indigo-500" />}
+                            <span className="text-xs font-semibold uppercase text-muted-foreground">{card.type}</span>
+                          </div>
+                          {editingScheduled?.contentId === card.id ? (
+                            <div className="space-y-2">
+                              <Input
+                                value={editingScheduled.title}
+                                onChange={(e) => setEditingScheduled((prev) => prev ? { ...prev, title: e.target.value } : prev)}
+                              />
+                              <Textarea
+                                rows={4}
+                                value={editingScheduled.description}
+                                onChange={(e) => setEditingScheduled((prev) => prev ? { ...prev, description: e.target.value } : prev)}
+                              />
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={() => {
+                                  if (editingScheduled) {
+                                    handleSaveContent(editingScheduled.contentId, {
+                                      title: editingScheduled.title,
+                                      description: editingScheduled.description,
+                                    });
+                                    setEditingScheduled(null);
+                                    setTimeout(() => refetchScheduler(), 500);
+                                  }
+                                }}>
+                                  <Save className="w-3 h-3 mr-1" />
+                                  Save
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => setEditingScheduled(null)}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="font-semibold text-foreground text-sm mb-1">{card.title}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-3">{card.description}</p>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="mt-2 w-full"
+                                onClick={() => setEditingScheduled({ contentId: card.id, type: card.type, title: card.title, description: card.description })}
+                              >
+                                <Edit className="w-3 h-3 mr-1" />
+                                Edit
+                              </Button>
+                            </>
+                          )}
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+
+                  {schedulerStatus.city.funFact && (
+                    <div className="p-3 bg-muted/30 rounded-md">
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Fun Fact</p>
+                      <p className="text-sm text-foreground">{schedulerStatus.city.funFact}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <CalendarCheck className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground mb-4">No city scheduled for tomorrow yet.</p>
+                  <Button
+                    onClick={() => generateTomorrowMutation.mutate()}
+                    disabled={generateTomorrowMutation.isPending}
+                    data-testid="button-generate-tomorrow"
+                  >
+                    {generateTomorrowMutation.isPending ? (
+                      <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generating...</>
+                    ) : (
+                      <><Wand2 className="w-4 h-4 mr-2" />Generate Tomorrow's City Now</>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </Card>
+
+            {/* How it works */}
+            <Card className="p-5">
+              <h3 className="font-semibold text-foreground mb-3">How the Auto-Scheduler Works</h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Wand2 className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-foreground">8am EST — Generate</p>
+                    <p className="text-xs text-muted-foreground">AI picks an unvisited city and writes all three content cards for tomorrow</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                    <Edit className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-foreground">Review Window</p>
+                    <p className="text-xs text-muted-foreground">Edit content or approve early. If no action, it auto-publishes at 9am EST</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                    <Send className="w-4 h-4 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-foreground">9am EST — Publish</p>
+                    <p className="text-xs text-muted-foreground">City goes live automatically — no action required on your end</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </TabsContent>
 
         {/* Create City Tab */}
         <TabsContent value="create">

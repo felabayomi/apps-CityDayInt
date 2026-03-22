@@ -3,8 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateCityContent, generateImageUrl } from "./openai";
+import { generateTomorrowsCity, autoPublishScheduledCities } from "./scheduler";
 import { insertCitySchema, insertCityContentSchema, insertTravelPlanSchema } from "@shared/schema";
 import { z } from "zod";
+import { db } from "./db";
+import { cities } from "@shared/schema";
+import { sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -229,6 +233,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching admin cities:", error);
       res.status(500).json({ message: "Failed to fetch cities" });
+    }
+  });
+
+  // Scheduler status — what's scheduled for tomorrow
+  app.get('/api/admin/scheduler/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const startOfTomorrow = new Date(tomorrow);
+      startOfTomorrow.setUTCHours(0, 0, 0, 0);
+      const endOfTomorrow = new Date(tomorrow);
+      endOfTomorrow.setUTCHours(23, 59, 59, 999);
+
+      const [scheduledCity] = await db
+        .select()
+        .from(cities)
+        .where(
+          sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published')`
+        );
+
+      if (!scheduledCity) {
+        return res.json({ scheduled: false, city: null });
+      }
+
+      const content = await storage.getCityContent(scheduledCity.id);
+      res.json({ scheduled: true, city: { ...scheduledCity, content } });
+    } catch (error) {
+      console.error("Error fetching scheduler status:", error);
+      res.status(500).json({ message: "Failed to fetch scheduler status" });
+    }
+  });
+
+  // Manually trigger generation for tomorrow
+  app.post('/api/admin/scheduler/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const result = await generateTomorrowsCity();
+      res.json(result);
+    } catch (error) {
+      console.error("Error triggering generation:", error);
+      res.status(500).json({ message: error.message || "Failed to generate" });
+    }
+  });
+
+  // Manually trigger auto-publish
+  app.post('/api/admin/scheduler/publish-now', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const result = await autoPublishScheduledCities();
+      res.json(result);
+    } catch (error) {
+      console.error("Error triggering auto-publish:", error);
+      res.status(500).json({ message: error.message || "Failed to publish" });
+    }
+  });
+
+  // Approve a scheduled city immediately
+  app.post('/api/admin/cities/:cityId/approve', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { cityId } = req.params;
+      const updatedCity = await storage.updateCity(cityId, { status: 'published' });
+      res.json(updatedCity);
+    } catch (error) {
+      console.error("Error approving city:", error);
+      res.status(500).json({ message: error.message || "Failed to approve city" });
     }
   });
 

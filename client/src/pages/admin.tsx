@@ -369,7 +369,7 @@ export default function Admin() {
                     <Badge variant="outline" className="text-green-600 border-green-300">Active</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Generates tomorrow's city at <strong>2pm EST</strong> · Auto-publishes at <strong>9am EST</strong> if not manually approved
+                    Generates tomorrow's city today at <strong>2pm EST</strong> · Auto-publishes tomorrow at <strong>9am EST</strong> if not manually approved
                   </p>
                 </div>
                 <Button
@@ -529,7 +529,7 @@ export default function Admin() {
                   </div>
                   <div>
                     <p className="font-medium text-sm text-foreground">Review Window</p>
-                    <p className="text-xs text-muted-foreground">Edit content or approve early. If no action, it auto-publishes at 9am EST</p>
+                    <p className="text-xs text-muted-foreground">Edit content or approve early. If no action, the city auto-publishes tomorrow at 9am EST</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -537,8 +537,8 @@ export default function Admin() {
                     <Send className="w-4 h-4 text-green-500" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-foreground">9am EST — Publish</p>
-                    <p className="text-xs text-muted-foreground">City goes live automatically — no action required on your end</p>
+                    <p className="font-medium text-sm text-foreground">9am EST Next Day — Publish</p>
+                    <p className="text-xs text-muted-foreground">Tomorrow's city goes live automatically — no action required on your end</p>
                   </div>
                 </div>
               </div>

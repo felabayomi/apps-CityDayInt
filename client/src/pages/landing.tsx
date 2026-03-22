@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { CityCards } from "@/components/city-cards";
-import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, CheckCircle, Archive, Clock } from "lucide-react";
+import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, Archive, Clock } from "lucide-react";
 import { useLocation } from "wouter";
 
 // Curated travel/cityscape Unsplash photos — rotate daily as a fallback
@@ -266,108 +266,6 @@ export default function Landing() {
               </div>
               <h3 className="text-xl font-bold text-foreground mb-4">Global Traveler Community</h3>
               <p className="text-muted-foreground">Join thousands of international travel enthusiasts discovering and saving their favourite cities every day.</p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className="py-16 bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Choose Your Journey</h2>
-            <p className="text-xl text-muted-foreground">Start free, upgrade when you're ready to explore more</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Free Plan */}
-            <Card className="p-8 border border-border">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-foreground mb-2">Explorer</h3>
-                <div className="flex items-center justify-center mb-4">
-                  <span className="text-4xl font-bold text-foreground">$0</span>
-                  <span className="text-muted-foreground ml-2">/month</span>
-                </div>
-                <p className="text-muted-foreground">Perfect for casual travelers</p>
-              </div>
-              
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Daily city discovery</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Basic travel tips</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Cultural insights</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Mobile app access</span>
-                </li>
-              </ul>
-              
-              <Button 
-                className="w-full bg-muted hover:bg-muted/80 text-foreground"
-                onClick={() => window.location.href = 'https://schedez.io/'}
-                data-testid="button-free-plan"
-              >
-                Start Free
-              </Button>
-            </Card>
-
-            {/* Premium Plan */}
-            <Card className="p-8 border-2 border-primary/20 relative bg-gradient-to-br from-primary/5 to-secondary/5">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-accent text-accent-foreground px-4 py-2 rounded-full text-sm font-semibold">Most Popular</span>
-              </div>
-              
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-foreground mb-2">Wanderer</h3>
-                <div className="flex items-center justify-center mb-4">
-                  <span className="text-4xl font-bold text-foreground">$7</span>
-                  <span className="text-muted-foreground ml-2">/month</span>
-                </div>
-                <p className="text-muted-foreground">For serious travel enthusiasts</p>
-              </div>
-              
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Everything in Explorer</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Access to past cities</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Detailed itineraries</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Exclusive deals & discounts</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Offline city guides</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="text-secondary mr-3" size={20} />
-                  <span>Priority customer support</span>
-                </li>
-              </ul>
-              
-              <Button 
-                className="w-full gradient-bg text-white hover:opacity-90"
-                onClick={() => window.location.href = 'https://schedez.io/'}
-                data-testid="button-premium-plan"
-              >
-                Start 7-Day Free Trial
-              </Button>
             </Card>
           </div>
         </div>

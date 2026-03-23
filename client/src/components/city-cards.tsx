@@ -123,7 +123,7 @@ function CityContentCard({ content, cityName }: { content: CityContent; cityName
           size="sm" 
           variant="outline"
           className="text-xs"
-          onClick={() => window.open(`https://booking.com/searchresults.html?ss=${cityName}`, '_blank')}
+          onClick={() => window.open('https://schedez.io/', '_blank')}
           data-testid="button-book-hotel"
         >
           🏨 Hotel
@@ -132,7 +132,7 @@ function CityContentCard({ content, cityName }: { content: CityContent; cityName
           size="sm" 
           variant="outline" 
           className="text-xs"
-          onClick={() => window.open(`https://getyourguide.com/s/?q=${cityName}`, '_blank')}
+          onClick={() => window.open('https://schedez.io/', '_blank')}
           data-testid="button-explore-tours"
         >
           🎫 Tours
@@ -141,7 +141,7 @@ function CityContentCard({ content, cityName }: { content: CityContent; cityName
           size="sm" 
           variant="outline"
           className="text-xs" 
-          onClick={() => window.open(`https://skyscanner.com/transport/flights/everywhere/${cityName}`, '_blank')}
+          onClick={() => window.open('https://schedez.io/', '_blank')}
           data-testid="button-search-flights"
         >
           ✈️ Flights

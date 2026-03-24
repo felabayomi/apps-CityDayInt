@@ -134,6 +134,78 @@ function getTomorrowPublishDate(): Date {
   return tomorrow;
 }
 
+async function hasCityForToday(): Promise<boolean> {
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setUTCHours(0, 0, 0, 0);
+  const endOfToday = new Date(now);
+  endOfToday.setUTCHours(23, 59, 59, 999);
+
+  const [existing] = await db
+    .select()
+    .from(cities)
+    .where(
+      sql`${cities.publishDate} >= ${startOfToday} AND ${cities.publishDate} <= ${endOfToday} AND ${cities.status} IN ('scheduled', 'published')`
+    );
+
+  return !!existing;
+}
+
+async function generateAndPublishTodaysCity(): Promise<void> {
+  try {
+    console.log("[Scheduler] Today has no city — generating and publishing one now...");
+    const usedNames = await getUsedCityNames();
+    const destination = pickNextCity(usedNames);
+
+    if (!destination) {
+      console.log("[Scheduler] All destinations exhausted. Cannot generate today's city.");
+      return;
+    }
+
+    console.log(`[Scheduler] Generating today's city: ${destination.name}, ${destination.country}...`);
+    const aiContent = await generateCityContent(`${destination.name}, ${destination.country}`);
+
+    const now = new Date();
+    const slug = slugify(destination.name);
+
+    const city = await storage.createCity({
+      name: destination.name,
+      country: destination.country,
+      region: destination.region,
+      slug,
+      flag: aiContent.flag,
+      publishDate: now,
+      status: "published",
+      funFact: aiContent.funFact,
+    });
+
+    for (const type of ["morning", "afternoon", "evening"] as const) {
+      await storage.createCityContent({
+        cityId: city.id,
+        type,
+        title: aiContent[type].title,
+        description: aiContent[type].description,
+        imageUrl: "",
+        affiliateLink: "",
+      });
+    }
+
+    console.log(`[Scheduler] Today's city published: ${destination.name}, ${destination.country}`);
+
+    try {
+      await sendPushToAll({
+        title: "Today's city is live!",
+        body: `Explore ${destination.name}, ${destination.country} — your daily travel inspiration is ready.`,
+        url: "/",
+      });
+    } catch (pushErr: any) {
+      console.error("[Scheduler] Push notification for today's city failed:", pushErr.message);
+    }
+  } catch (error: any) {
+    console.error("[Scheduler] Failed to generate today's city:", error.message);
+  }
+}
+
 async function getUsedCityNames(): Promise<Set<string>> {
   const allCities = await storage.getAllCities();
   return new Set(allCities.map((c) => c.name.toLowerCase()));
@@ -272,14 +344,23 @@ export async function autoPublishScheduledCities(): Promise<{ published: string[
 }
 
 export function startScheduler() {
-  // On startup: initialize VAPID keys, check if tomorrow needs a city, and publish any due cities
+  // On startup: initialize VAPID keys, ensure today has a live city, then ensure tomorrow is queued
   setTimeout(async () => {
     await initVapid();
+
+    // 1. If today has no city at all, generate and publish one immediately
+    const todayExists = await hasCityForToday();
+    if (!todayExists) {
+      await generateAndPublishTodaysCity();
+    } else {
+      // 2. Today exists but might still be in "scheduled" state — publish if due
+      await autoPublishScheduledCities();
+    }
+
+    // 3. Ensure tomorrow is queued
     console.log("[Scheduler] Startup check: ensuring tomorrow has a city...");
     const result = await generateTomorrowsCity();
     console.log(`[Scheduler] Startup check result: ${result.message}`);
-    // Also auto-publish any scheduled cities that are now due
-    await autoPublishScheduledCities();
   }, 3000); // small delay so DB is ready
 
   // Generate tomorrow's city at 3pm EST (20:00 UTC) every day

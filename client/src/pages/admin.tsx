@@ -127,8 +127,7 @@ export default function Admin() {
 
   const updateCityMutation = useMutation({
     mutationFn: async ({ cityId, data }: { cityId: string; data: any }) => {
-      const res = await apiRequest('PUT', `/api/admin/cities/${cityId}`, data);
-      return res.json();
+      await apiRequest('PUT', `/api/admin/cities/${cityId}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/cities'] });
@@ -141,8 +140,7 @@ export default function Admin() {
 
   const updateContentMutation = useMutation({
     mutationFn: async ({ contentId, data }: { contentId: string; data: any }) => {
-      const res = await apiRequest('PUT', `/api/admin/content/${contentId}`, data);
-      return res.json();
+      await apiRequest('PUT', `/api/admin/content/${contentId}`, data);
     },
     onSuccess: () => {
       toast({ title: "Saved", description: "Content saved successfully." });
@@ -243,8 +241,7 @@ export default function Admin() {
 
   const saveCityMetaMutation = useMutation({
     mutationFn: async ({ cityId, data }: { cityId: string; data: any }) => {
-      const res = await apiRequest('PUT', `/api/admin/cities/${cityId}`, data);
-      return res.json();
+      await apiRequest('PUT', `/api/admin/cities/${cityId}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/cities'] });

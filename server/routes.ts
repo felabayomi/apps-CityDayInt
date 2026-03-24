@@ -171,11 +171,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { cityId } = req.params;
-      const updateData = req.body;
-      
+      const rawData = req.body;
+
+      // Sanitize update payload — convert publishDate string → Date, strip undefined
+      const updateData: Record<string, any> = {};
+      if (rawData.name !== undefined) updateData.name = rawData.name;
+      if (rawData.country !== undefined) updateData.country = rawData.country;
+      if (rawData.region !== undefined) updateData.region = rawData.region;
+      if (rawData.flag !== undefined) updateData.flag = rawData.flag;
+      if (rawData.funFact !== undefined) updateData.funFact = rawData.funFact;
+      if (rawData.status !== undefined) updateData.status = rawData.status;
+      if (rawData.slug !== undefined) updateData.slug = rawData.slug;
+      if (rawData.publishDate !== undefined && rawData.publishDate !== null && rawData.publishDate !== '') {
+        const d = new Date(rawData.publishDate);
+        if (!isNaN(d.getTime())) updateData.publishDate = d;
+      }
+
       const updatedCity = await storage.updateCity(cityId, updateData);
+      if (!updatedCity) {
+        return res.status(404).json({ message: "City not found" });
+      }
       res.json(updatedCity);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating city:", error);
       res.status(400).json({ message: error.message || "Failed to update city" });
     }

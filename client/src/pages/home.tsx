@@ -143,6 +143,7 @@ export default function Home() {
               isUserSaved={savedCityIds.has(todaysCity.id)}
             />
           </Card>
+          <div data-tts-end />
         </div>
       ) : (
         <Card className="p-6 sm:p-8 text-center mb-5 sm:mb-8">

@@ -82,6 +82,7 @@ export default function CityPage() {
       <VoicePlayer cityId={city.id} />
 
       <CityCards city={city} isUserSaved={false} onSaveToggle={() => {}} />
+      <div data-tts-end />
 
       {!isAuthenticated && (
         <Card className="mt-8 p-6 text-center bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">

@@ -18,7 +18,7 @@ function getSecsUntil10amET(): number {
   const get = (t: string) =>
     parseInt(parts.find((p) => p.type === t)?.value || "0");
   const nowSecs = get("hour") * 3600 + get("minute") * 60 + get("second");
-  const targetSecs = 10 * 3600; // 10:00:00 ET
+  const targetSecs = 10 * 3600;
   return nowSecs <= targetSecs ? targetSecs - nowSecs : -1;
 }
 
@@ -44,6 +44,8 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
   >("idle");
   const [progress, setProgress] = useState(0);
   const [secsLeft, setSecsLeft] = useState(() => getSecsUntil10amET());
+
+  const playerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioBlobUrlRef = useRef<string | null>(null);
   const autoPlayFiredRef = useRef(false);
@@ -67,6 +69,27 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
       if (audioBlobUrlRef.current) URL.revokeObjectURL(audioBlobUrlRef.current);
     };
   }, []);
+
+  // Scroll between the player card and the [data-tts-end] sentinel element.
+  // This keeps scrolling within the content the audio is actually describing.
+  function autoScrollToProgress(prog: number) {
+    const startEl = playerRef.current;
+    const endEl = document.querySelector("[data-tts-end]");
+    if (!startEl) return;
+
+    const startTop =
+      startEl.getBoundingClientRect().top + window.scrollY;
+    const endBottom = endEl
+      ? endEl.getBoundingClientRect().bottom + window.scrollY
+      : startTop + document.documentElement.scrollHeight * 0.6;
+
+    // Keep the "reading position" in the upper portion of the viewport
+    const scrollRange = endBottom - startTop - window.innerHeight * 0.4;
+    if (scrollRange <= 0) return;
+
+    const targetY = startTop + scrollRange * (prog / 100);
+    window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+  }
 
   async function handleListen() {
     if (audioState === "playing") {
@@ -100,6 +123,7 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
         if (!audio.duration) return;
         const prog = (audio.currentTime / audio.duration) * 100;
         setProgress(prog);
+        // Scroll every 3 seconds of audio time
         if (audio.currentTime - lastScrolledAt >= 3) {
           lastScrolledAt = audio.currentTime;
           autoScrollToProgress(prog);
@@ -129,14 +153,6 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
     setProgress(0);
   }
 
-  function autoScrollToProgress(prog: number) {
-    const docHeight =
-      document.documentElement.scrollHeight - window.innerHeight;
-    if (docHeight <= 0) return;
-    const targetY = docHeight * (prog / 100);
-    window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
-  }
-
   if (!isAdmin) {
     return (
       <Card className="p-4 mb-6">
@@ -164,63 +180,65 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
   }
 
   return (
-    <Card className="p-4 mb-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <Volume2 className="h-4 w-4 text-primary shrink-0" />
-        <span className="text-sm font-semibold text-foreground">
-          Voice Read
-        </span>
+    <div ref={playerRef}>
+      <Card className="p-4 mb-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <Volume2 className="h-4 w-4 text-primary shrink-0" />
+          <span className="text-sm font-semibold text-foreground">
+            Voice Read
+          </span>
 
-        <div className="flex flex-wrap items-center gap-2 ml-auto">
-          {audioState === "idle" && secsLeft > 300 && (
-            <span className="text-xs text-muted-foreground">
-              Auto-plays at 10:00 AM ET
-            </span>
-          )}
-          {audioState === "idle" && secsLeft > 0 && secsLeft <= 300 && (
-            <span className="text-xs text-destructive animate-pulse">
-              Auto-plays in {formatCountdown(secsLeft)}
-            </span>
-          )}
-
-          <Button
-            size="sm"
-            variant={audioState === "playing" ? "outline" : "default"}
-            onClick={handleListen}
-            disabled={audioState === "loading"}
-          >
-            {audioState === "loading" ? (
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-            ) : audioState === "playing" ? (
-              <Pause className="w-3 h-3 mr-1" />
-            ) : (
-              <Play className="w-3 h-3 mr-1" />
+          <div className="flex flex-wrap items-center gap-2 ml-auto">
+            {audioState === "idle" && secsLeft > 300 && (
+              <span className="text-xs text-muted-foreground">
+                Auto-plays at 10:00 AM ET
+              </span>
             )}
-            {audioState === "loading"
-              ? "Generating…"
-              : audioState === "playing"
-                ? "Pause"
-                : audioState === "paused"
-                  ? "Resume"
-                  : "Play"}
-          </Button>
+            {audioState === "idle" && secsLeft > 0 && secsLeft <= 300 && (
+              <span className="text-xs text-destructive animate-pulse">
+                Auto-plays in {formatCountdown(secsLeft)}
+              </span>
+            )}
 
-          {audioState !== "idle" && (
-            <Button size="icon" variant="ghost" onClick={handleStop}>
-              <Square className="w-3 h-3" />
+            <Button
+              size="sm"
+              variant={audioState === "playing" ? "outline" : "default"}
+              onClick={handleListen}
+              disabled={audioState === "loading"}
+            >
+              {audioState === "loading" ? (
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              ) : audioState === "playing" ? (
+                <Pause className="w-3 h-3 mr-1" />
+              ) : (
+                <Play className="w-3 h-3 mr-1" />
+              )}
+              {audioState === "loading"
+                ? "Generating…"
+                : audioState === "playing"
+                  ? "Pause"
+                  : audioState === "paused"
+                    ? "Resume"
+                    : "Play"}
             </Button>
-          )}
-        </div>
-      </div>
 
-      {(audioState === "playing" || audioState === "paused") && (
-        <div className="mt-3 w-full bg-muted rounded-full h-1.5">
-          <div
-            className="bg-primary h-1.5 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+            {audioState !== "idle" && (
+              <Button size="icon" variant="ghost" onClick={handleStop}>
+                <Square className="w-3 h-3" />
+              </Button>
+            )}
+          </div>
         </div>
-      )}
-    </Card>
+
+        {(audioState === "playing" || audioState === "paused") && (
+          <div className="mt-3 w-full bg-muted rounded-full h-1.5">
+            <div
+              className="bg-primary h-1.5 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

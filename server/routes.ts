@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { generateCityContent, generateImageUrl } from "./openai";
+import { generateCityContent, generateImageUrl, textToSpeech } from "./openai";
 import { generateTomorrowsCity, autoPublishScheduledCities } from "./scheduler";
 import { insertCitySchema, insertCityContentSchema, insertTravelPlanSchema, pushSubscriptions } from "@shared/schema";
 import { z } from "zod";
@@ -24,6 +24,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // ── TTS: Admin-only voice generation ──────────────────────────────────────
+  app.post('/api/tts/:cityId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || user.email !== 'wordofday2025@gmail.com') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { cityId } = req.params;
+      const city = await storage.getCityById(cityId);
+      if (!city) return res.status(404).json({ message: "City not found" });
+
+      // Return cached audio instantly
+      if ((city as any).audioUrl) {
+        const base64Data = ((city as any).audioUrl as string).replace('data:audio/mpeg;base64,', '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        res.set('Content-Type', 'audio/mpeg');
+        res.set('Content-Length', buffer.length.toString());
+        return res.send(buffer);
+      }
+
+      // Build narration text from city + content
+      const content = await storage.getCityContent(cityId);
+      const contentParts = content.map((c: any) => {
+        const label = c.type === 'morning' ? 'Morning Discovery'
+          : c.type === 'afternoon' ? 'Afternoon Experience'
+          : 'Evening Insight';
+        return `${label}: ${c.title}. ${c.description}`;
+      });
+
+      const fullText = [
+        `Welcome to Daily Felix — City of the Day!`,
+        `Today we explore ${city.name}, ${city.country}.`,
+        city.funFact ? `Fun fact: ${city.funFact}` : null,
+        ...contentParts,
+      ].filter(Boolean).join('\n\n');
+
+      // Generate TTS audio
+      console.log(`[TTS] Generating audio for ${city.name} (${cityId})`);
+      const audioBuffer = await textToSpeech(fullText);
+
+      // Cache as base64
+      const base64 = `data:audio/mpeg;base64,${audioBuffer.toString('base64')}`;
+      await storage.updateCity(cityId, { audioUrl: base64 } as any);
+
+      res.set('Content-Type', 'audio/mpeg');
+      res.set('Content-Length', audioBuffer.length.toString());
+      res.send(audioBuffer);
+    } catch (error: any) {
+      console.error('[TTS] Error:', error.message);
+      res.status(500).json({ message: error.message || 'TTS generation failed' });
     }
   });
 

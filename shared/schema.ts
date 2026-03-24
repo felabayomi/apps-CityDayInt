@@ -58,6 +58,7 @@ export const cities = pgTable("cities", {
   tags: text("tags").array(),
   deepDiveMarkdown: text("deep_dive_markdown"), // Premium content
   miniItineraryMd: text("mini_itinerary_md"), // Premium content
+  audioUrl: text("audio_url"), // Cached TTS audio as base64 data URL
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

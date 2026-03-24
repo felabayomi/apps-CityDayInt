@@ -5,6 +5,42 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || "default_key" 
 });
 
+// ── Text-to-Speech ──────────────────────────────────────────────────────────
+
+function splitChunks(text: string, max = 2000): string[] {
+  const chunks: string[] = [];
+  let remaining = text;
+  while (remaining.length > max) {
+    let cut = remaining.lastIndexOf(". ", max);
+    if (cut === -1) cut = remaining.lastIndexOf(" ", max);
+    if (cut === -1) cut = max;
+    else cut += 1;
+    chunks.push(remaining.slice(0, cut).trim());
+    remaining = remaining.slice(cut).trim();
+  }
+  if (remaining.length > 0) chunks.push(remaining);
+  return chunks;
+}
+
+export async function textToSpeech(text: string): Promise<Buffer> {
+  const chunks = splitChunks(text);
+  const buffers: Buffer[] = [];
+  for (const chunk of chunks) {
+    const response = await (openai.chat.completions.create as any)({
+      model: "gpt-audio",
+      modalities: ["text", "audio"],
+      audio: { voice: "onyx", format: "mp3" },
+      messages: [
+        { role: "system", content: "You are an assistant that performs text-to-speech." },
+        { role: "user", content: `Repeat the following text verbatim: ${chunk}` },
+      ],
+    });
+    const audioData: string = response.choices[0]?.message?.audio?.data ?? "";
+    buffers.push(Buffer.from(audioData, "base64"));
+  }
+  return Buffer.concat(buffers);
+}
+
 export interface CityContentData {
   morning: {
     title: string;

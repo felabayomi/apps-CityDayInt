@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { CityCards } from "@/components/city-cards";
+import { VoicePlayer } from "@/components/VoicePlayer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +78,8 @@ export default function CityPage() {
           </div>
         </Card>
       )}
+
+      <VoicePlayer cityId={city.id} />
 
       <CityCards city={city} isUserSaved={false} onSaveToggle={() => {}} />
 

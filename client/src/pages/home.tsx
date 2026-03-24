@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CityCards } from "@/components/city-cards";
+import { VoicePlayer } from "@/components/VoicePlayer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Globe, MapPin, Calendar, Heart, Trophy, Activity } from "lucide-react";
@@ -134,6 +135,7 @@ export default function Home() {
       {/* Today's City */}
       {todaysCity ? (
         <div className="mb-5 sm:mb-8">
+          <VoicePlayer cityId={todaysCity.id} />
           <Card className="p-4 sm:p-6 md:p-8">
             <CityCards 
               city={todaysCity} 

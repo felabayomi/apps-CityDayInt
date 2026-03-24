@@ -225,7 +225,7 @@ export default function Landing() {
                     {city.flag && <span className="text-2xl">{city.flag}</span>}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(city.publishDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    {new Date(city.publishDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
                   </p>
                   {city.funFact && (
                     <p className="text-xs text-muted-foreground mt-2 line-clamp-2 italic">"{city.funFact}"</p>

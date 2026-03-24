@@ -63,7 +63,7 @@ export default function CityPage() {
           <MapPin className="w-4 h-4" />
           <span>{city.country}</span>
           <span>·</span>
-          <span>{new Date(city.publishDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          <span>{new Date(city.publishDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}</span>
         </div>
       </div>
 

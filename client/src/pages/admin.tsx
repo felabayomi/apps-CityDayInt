@@ -327,7 +327,7 @@ export default function Admin() {
                   <div>
                     <p className="font-semibold text-foreground">{city.name}, {city.country}</p>
                     <p className="text-xs text-muted-foreground">
-                      Scheduled: {new Date(city.publishDate).toLocaleDateString()} · Status: {city.status}
+                      Scheduled: {new Date(city.publishDate).toLocaleDateString('en-US', { timeZone: 'UTC' })} · Status: {city.status}
                     </p>
                   </div>
                 </div>
@@ -748,7 +748,7 @@ export default function Admin() {
                         </Badge>
                       </td>
                       <td className="py-3 px-3 text-muted-foreground">
-                        {new Date(city.publishDate).toLocaleDateString()}
+                        {new Date(city.publishDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                       </td>
                       <td className="py-3 px-3 text-foreground">{city.views || 0}</td>
                       <td className="py-3 px-3">

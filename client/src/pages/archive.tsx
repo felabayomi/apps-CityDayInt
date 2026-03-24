@@ -28,7 +28,7 @@ export default function Archive() {
 
   const byYear: Record<string, any[]> = {};
   filtered.forEach((city: any) => {
-    const year = new Date(city.publishDate).getFullYear().toString();
+    const year = new Date(city.publishDate).getUTCFullYear().toString();
     if (!byYear[year]) byYear[year] = [];
     byYear[year].push(city);
   });
@@ -101,7 +101,7 @@ export default function Archive() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Calendar className="w-3 h-3" />
-                        {new Date(city.publishDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {new Date(city.publishDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
                       </div>
                       <ArrowRight className="w-4 h-4 text-muted-foreground" />
                     </div>

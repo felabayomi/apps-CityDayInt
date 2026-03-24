@@ -264,7 +264,7 @@ export function CityCards({ city, onSaveToggle, isUserSaved = false }: CityCards
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-            {new Date(city.publishDate).toLocaleDateString()}
+            {new Date(city.publishDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}
           </div>
         </div>
         <p className="text-sm sm:text-xl text-muted-foreground max-w-3xl mx-auto">

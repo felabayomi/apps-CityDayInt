@@ -70,25 +70,13 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
     };
   }, []);
 
-  // Scroll between the player card and the [data-tts-end] sentinel element.
-  // This keeps scrolling within the content the audio is actually describing.
-  function autoScrollToProgress(prog: number) {
-    const startEl = playerRef.current;
-    const endEl = document.querySelector("[data-tts-end]");
-    if (!startEl) return;
-
-    const startTop =
-      startEl.getBoundingClientRect().top + window.scrollY;
-    const endBottom = endEl
-      ? endEl.getBoundingClientRect().bottom + window.scrollY
-      : startTop + document.documentElement.scrollHeight * 0.6;
-
-    // Keep the "reading position" in the upper portion of the viewport
-    const scrollRange = endBottom - startTop - window.innerHeight * 0.4;
-    if (scrollRange <= 0) return;
-
-    const targetY = startTop + scrollRange * (prog / 100);
-    window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+  // Scroll so the player sits near the top of the viewport, bringing the
+  // city cards into view — called once when playback begins.
+  function scrollIntoFocus() {
+    const el = playerRef.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - 16;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
   }
 
   async function handleListen() {
@@ -118,16 +106,10 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
       const audio = new Audio(url);
       audioRef.current = audio;
 
-      let lastScrolledAt = -5;
       audio.addEventListener("timeupdate", () => {
         if (!audio.duration) return;
         const prog = (audio.currentTime / audio.duration) * 100;
         setProgress(prog);
-        // Scroll every 3 seconds of audio time
-        if (audio.currentTime - lastScrolledAt >= 3) {
-          lastScrolledAt = audio.currentTime;
-          autoScrollToProgress(prog);
-        }
       });
 
       audio.addEventListener("ended", () => {
@@ -137,6 +119,8 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
 
       await audio.play();
       setAudioState("playing");
+      // Bring the player + cards into view once playback starts
+      scrollIntoFocus();
     } catch {
       setAudioState("idle");
     }

@@ -18,7 +18,7 @@ function getSecsUntil10amET(): number {
   const get = (t: string) =>
     parseInt(parts.find((p) => p.type === t)?.value || "0");
   const nowSecs = get("hour") * 3600 + get("minute") * 60 + get("second");
-  const targetSecs = 10 * 3600;
+  const targetSecs = 14 * 3600; // 2:00 PM ET
   return nowSecs <= targetSecs ? targetSecs - nowSecs : -1;
 }
 
@@ -175,7 +175,7 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
           <div className="flex flex-wrap items-center gap-2 ml-auto">
             {audioState === "idle" && secsLeft > 300 && (
               <span className="text-xs text-muted-foreground">
-                Auto-plays at 10:00 AM ET
+                Auto-plays at 2:00 PM ET
               </span>
             )}
             {audioState === "idle" && secsLeft > 0 && secsLeft <= 300 && (

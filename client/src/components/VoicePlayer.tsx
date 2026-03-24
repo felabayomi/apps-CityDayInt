@@ -5,7 +5,7 @@ import { Play, Pause, Square, Radio, Volume2, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const ADMIN_EMAIL = "wordofday2025@gmail.com";
-const TUNE_IN_URL = "https://citydiscoverer.ai";
+const TUNE_IN_URL = "https://eacd.us";
 
 function getSecsUntil10amET(): number {
   const parts = new Intl.DateTimeFormat("en-US", {

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { CityCards } from "@/components/city-cards";
+import { VoicePlayer } from "@/components/VoicePlayer";
 import { Globe, Calendar, Smartphone, Heart, DollarSign, Users, Archive, Clock, CheckCircle, MapPin } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -181,7 +182,10 @@ export default function Landing() {
               <p className="mt-4 text-muted-foreground">Loading today's city...</p>
             </div>
           ) : todaysCity ? (
-            <CityCards city={todaysCity} isUserSaved={false} onSaveToggle={() => {}} />
+            <>
+              <VoicePlayer cityId={todaysCity.id} />
+              <CityCards city={todaysCity} isUserSaved={false} onSaveToggle={() => {}} />
+            </>
           ) : (
             <div className="text-center py-12">
               <Globe className="mx-auto h-12 w-12 text-muted-foreground mb-4" />

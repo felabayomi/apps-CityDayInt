@@ -147,7 +147,7 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
               Hear This City Read Live
             </p>
             <p className="text-xs text-muted-foreground">
-              Tune in every day at <strong>10am EST</strong> on{" "}
+              Tune in every day at <strong>2pm EST</strong> on{" "}
               <a
                 href={TUNE_IN_URL}
                 target="_blank"

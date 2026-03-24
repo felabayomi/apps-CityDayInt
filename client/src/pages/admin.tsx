@@ -303,7 +303,7 @@ export default function Admin() {
           <p className="text-2xl font-bold text-green-500">{published.length}</p>
           <p className="text-sm text-muted-foreground">Published</p>
         </Card>
-        <Card className="p-5 cursor-pointer hover-elevate" onClick={() => setActiveTab("scheduler")} data-testid="stat-scheduled">
+        <Card className="p-5 cursor-pointer hover-elevate" onClick={() => goToManageWithFilter("scheduled")} data-testid="stat-scheduled">
           <p className="text-2xl font-bold text-foreground">{scheduledCount}</p>
           <p className="text-sm text-muted-foreground">Scheduled</p>
         </Card>

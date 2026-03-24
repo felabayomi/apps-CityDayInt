@@ -154,7 +154,7 @@ export function VoicePlayer({ cityId }: VoicePlayerProps) {
                 rel="noopener noreferrer"
                 className="text-primary underline underline-offset-2"
               >
-                citydiscoverer.ai
+                eacd.us
               </a>
             </p>
           </div>

@@ -18,12 +18,19 @@ import {
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
 
+const internationalCityWhereSql = sql`
+  COALESCE(LOWER(${cities.country}), '') NOT IN ('usa', 'united states', 'united states of america', 'u.s.a', 'u.s.')
+  AND ${cities.country} NOT ILIKE '%, USA'
+  AND ${cities.country} NOT ILIKE '%, U.S.A.'
+`;
+
 // Interface for storage operations
 export interface IStorage {
   // User operations - mandatory for Replit Auth
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  
+
   // City operations
   createCity(city: InsertCity): Promise<City>;
   updateCity(id: string, city: Partial<InsertCity>): Promise<City>;
@@ -35,19 +42,19 @@ export interface IStorage {
   incrementCityViews(cityId: string): Promise<void>;
   incrementCitySaves(cityId: string): Promise<void>;
   incrementCityShares(cityId: string): Promise<void>;
-  
+
   // City content operations
   createCityContent(content: InsertCityContent): Promise<CityContent>;
   updateCityContent(id: string, content: Partial<InsertCityContent>): Promise<CityContent>;
   getCityContent(cityId: string): Promise<CityContent[]>;
   deleteCityContent(id: string): Promise<void>;
-  
+
   // User saved cities
   saveCity(userId: string, cityId: string): Promise<void>;
   unsaveCity(userId: string, cityId: string): Promise<void>;
   getUserSavedCities(userId: string): Promise<UserSavedCity[]>;
   isCitySavedByUser(userId: string, cityId: string): Promise<boolean>;
-  
+
   // Travel plans
   createTravelPlan(plan: InsertTravelPlan): Promise<TravelPlan>;
   updateTravelPlan(id: string, plan: Partial<InsertTravelPlan>): Promise<TravelPlan>;
@@ -55,7 +62,7 @@ export interface IStorage {
   deleteTravelPlan(id: string): Promise<void>;
   addCityToTravelPlan(travelPlanId: string, cityId: string, orderIndex: number): Promise<void>;
   removeCityFromTravelPlan(travelPlanId: string, cityId: string): Promise<void>;
-  
+
   // Analytics
   getCityAnalytics(): Promise<any[]>;
   getUserStats(userId: string): Promise<any>;
@@ -70,6 +77,11 @@ export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 
@@ -117,15 +129,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCityById(id: string): Promise<City | undefined> {
-    const [city] = await db.select().from(cities).where(eq(cities.id, id));
+    const [city] = await db
+      .select()
+      .from(cities)
+      .where(and(eq(cities.id, id), internationalCityWhereSql));
     return city;
   }
 
   async getCityByDate(date: Date): Promise<City | undefined> {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Use UTC date boundaries to avoid timezone issues on Vercel (always UTC)
+    const utcYear = date.getUTCFullYear();
+    const utcMonth = date.getUTCMonth();
+    const utcDay = date.getUTCDate();
+    const startOfDay = new Date(Date.UTC(utcYear, utcMonth, utcDay, 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(utcYear, utcMonth, utcDay, 23, 59, 59, 999));
 
     const [city] = await db
       .select()
@@ -133,9 +150,22 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(cities.status, 'published'),
-          sql`${cities.publishDate} >= ${startOfDay} AND ${cities.publishDate} <= ${endOfDay}`
+          sql`${cities.publishDate} >= ${startOfDay} AND ${cities.publishDate} <= ${endOfDay}`,
+          internationalCityWhereSql
         )
       );
+
+    // Fallback: return the most recently published city if none matches today exactly
+    if (!city) {
+      const [latest] = await db
+        .select()
+        .from(cities)
+        .where(and(eq(cities.status, 'published'), internationalCityWhereSql))
+        .orderBy(desc(cities.publishDate))
+        .limit(1);
+      return latest;
+    }
+
     return city;
   }
 
@@ -147,13 +177,17 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(cities)
-      .where(eq(cities.status, 'published'))
+      .where(and(eq(cities.status, 'published'), internationalCityWhereSql))
       .orderBy(desc(cities.publishDate))
       .limit(limit);
   }
 
   async getAllCities(): Promise<City[]> {
-    return db.select().from(cities).orderBy(desc(cities.createdAt));
+    return db
+      .select()
+      .from(cities)
+      .where(internationalCityWhereSql)
+      .orderBy(desc(cities.createdAt));
   }
 
   async incrementCityViews(cityId: string): Promise<void> {
@@ -300,7 +334,7 @@ export class DatabaseStorage implements IStorage {
         publishDate: cities.publishDate,
       })
       .from(cities)
-      .where(eq(cities.status, 'published'))
+      .where(and(eq(cities.status, 'published'), internationalCityWhereSql))
       .orderBy(desc(cities.views));
   }
 
@@ -316,7 +350,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(travelPlans.userId, userId));
 
     const user = await this.getUser(userId);
-    const daysExploring = user?.createdAt 
+    const daysExploring = user?.createdAt
       ? Math.floor((new Date().getTime() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24))
       : 0;
 
@@ -331,7 +365,7 @@ export class DatabaseStorage implements IStorage {
     const totalRevenue = await db
       .select({ total: sql`sum(${cities.revenue})` })
       .from(cities)
-      .where(eq(cities.status, 'published'));
+      .where(and(eq(cities.status, 'published'), internationalCityWhereSql));
 
     const monthlyRevenue = await db
       .select({ total: sql`sum(${cities.revenue})` })
@@ -339,7 +373,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(cities.status, 'published'),
-          sql`${cities.publishDate} >= date_trunc('month', current_date)`
+          sql`${cities.publishDate} >= date_trunc('month', current_date)`,
+          internationalCityWhereSql
         )
       );
 

@@ -327,6 +327,13 @@ export async function autoPublishScheduledCities(): Promise<{ published: string[
     const publishedNames = published.map((c) => c.name);
     console.log(`[Scheduler] Auto-published: ${publishedNames.join(", ") || "none"}`);
 
+    // Self-heal after missed runs: ensure there is always a live city for today.
+    const todayExists = await hasCityForToday();
+    if (!todayExists) {
+      console.log("[Scheduler] No city found for today after auto-publish. Generating one now...");
+      await generateAndPublishTodaysCity();
+    }
+
     // Send push notification for each newly published city
     for (const city of published) {
       try {

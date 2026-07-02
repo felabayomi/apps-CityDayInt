@@ -5,11 +5,16 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-const connectionString = (
-  process.env.CITYDAYINT_DATABASE_URL ||
-  process.env.DATABASE_URL ||
-  ""
-).trim();
+const cleanConnectionString = (value: unknown) =>
+  String(value || "")
+    .replace(/\\r\\n/g, "")
+    .replace(/\\n/g, "")
+    .replace(/\r?\n/g, "")
+    .trim();
+
+const connectionString = cleanConnectionString(
+  process.env.CITYDAYINT_DATABASE_URL || process.env.DATABASE_URL || "",
+);
 
 if (!connectionString) {
   throw new Error(

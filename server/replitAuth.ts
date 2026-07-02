@@ -12,7 +12,11 @@ const sessionConnectionString = (
     process.env.CITYDAYINT_DATABASE_URL ||
     process.env.DATABASE_URL ||
     ""
-).trim();
+)
+    .replace(/\\r\\n/g, "")
+    .replace(/\\n/g, "")
+    .replace(/\r?\n/g, "")
+    .trim();
 
 const parseAdminEmails = () => {
     const emails = new Set<string>();

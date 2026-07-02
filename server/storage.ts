@@ -123,7 +123,7 @@ export class DatabaseStorage implements IStorage {
     const [updatedCity] = await db
       .update(cities)
       .set({ ...city, updatedAt: new Date() })
-      .where(eq(cities.id, id))
+      .where(and(eq(cities.id, id), internationalCityWhereSql))
       .returning();
     return updatedCity;
   }

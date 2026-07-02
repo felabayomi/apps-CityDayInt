@@ -6,6 +6,17 @@ import { cities } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { sendPushToAll, initVapid } from "./webpush";
 
+const INTERNATIONAL_CITY_SQL = sql`
+  COALESCE(LOWER(${cities.country}), '') NOT IN ('usa', 'united states', 'united states of america', 'u.s.a', 'u.s.')
+  AND ${cities.country} NOT ILIKE '%, USA'
+  AND ${cities.country} NOT ILIKE '%, U.S.A.'
+`;
+
+const isUsCountryName = (country: string) => {
+  const normalized = String(country || "").trim().toLowerCase();
+  return ["usa", "united states", "united states of america", "u.s.a", "u.s."].includes(normalized);
+};
+
 // 100+ popular international tourist destinations to rotate through
 const DESTINATION_POOL = [
   // Europe
@@ -71,11 +82,6 @@ const DESTINATION_POOL = [
   { name: "Yerevan", country: "Armenia", region: "Asia" },
 
   // Americas
-  { name: "New York City", country: "USA", region: "Americas" },
-  { name: "San Francisco", country: "USA", region: "Americas" },
-  { name: "New Orleans", country: "USA", region: "Americas" },
-  { name: "Chicago", country: "USA", region: "Americas" },
-  { name: "Miami", country: "USA", region: "Americas" },
   { name: "Havana", country: "Cuba", region: "Americas" },
   { name: "Mexico City", country: "Mexico", region: "Americas" },
   { name: "Oaxaca", country: "Mexico", region: "Americas" },
@@ -114,10 +120,9 @@ const DESTINATION_POOL = [
   { name: "Auckland", country: "New Zealand", region: "Oceania" },
   { name: "Queenstown", country: "New Zealand", region: "Oceania" },
   { name: "Fiji", country: "Fiji", region: "Oceania" },
-  { name: "Honolulu", country: "USA", region: "Oceania" },
   { name: "Papeete", country: "French Polynesia", region: "Oceania" },
   { name: "Cairns", country: "Australia", region: "Oceania" },
-];
+].filter((destination) => !isUsCountryName(destination.country));
 
 function slugify(text: string): string {
   return text
@@ -145,7 +150,7 @@ async function hasCityForToday(): Promise<boolean> {
     .select()
     .from(cities)
     .where(
-      sql`${cities.publishDate} >= ${startOfToday} AND ${cities.publishDate} <= ${endOfToday} AND ${cities.status} IN ('scheduled', 'published')`
+      sql`${cities.publishDate} >= ${startOfToday} AND ${cities.publishDate} <= ${endOfToday} AND ${cities.status} IN ('scheduled', 'published') AND ${INTERNATIONAL_CITY_SQL}`
     );
 
   return !!existing;
@@ -231,7 +236,7 @@ async function hasCityScheduledForTomorrow(): Promise<boolean> {
     .select()
     .from(cities)
     .where(
-      sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published')`
+      sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published') AND ${INTERNATIONAL_CITY_SQL}`
     );
 
   return !!existing;
@@ -256,7 +261,7 @@ export async function generateTomorrowsCity(force = false): Promise<{ success: b
       const endOfTomorrow = new Date(tomorrow);
       endOfTomorrow.setUTCHours(23, 59, 59, 999);
       await db.delete(cities).where(
-        sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published')`
+        sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published') AND ${INTERNATIONAL_CITY_SQL}`
       );
       console.log("[Scheduler] Deleted. Proceeding with fresh generation...");
     }
@@ -315,7 +320,7 @@ export async function autoPublishScheduledCities(): Promise<{ published: string[
       .update(cities)
       .set({ status: "published", updatedAt: now })
       .where(
-        sql`${cities.status} = 'scheduled' AND ${cities.publishDate} <= ${now}`
+        sql`${cities.status} = 'scheduled' AND ${cities.publishDate} <= ${now} AND ${INTERNATIONAL_CITY_SQL}`
       )
       .returning({ name: cities.name, country: cities.country });
 
@@ -392,5 +397,5 @@ export function startScheduler() {
     }
   }, { timezone: "UTC" });
 
-  console.log("[Scheduler] Started — generate at 3pm EST, auto-publish at 9am EST next day");
+  console.log("[Scheduler] Started — generate at 3pm EST, auto-publish at 9am EST");
 }

@@ -1,0 +1,32 @@
+{
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist/public",
+    "crons": [
+        {
+            "path": "/api/cron/generate-tomorrow",
+            "schedule": "0 20 * * *"
+        },
+        {
+            "path": "/api/cron/auto-publish",
+            "schedule": "0 14 * * *"
+        }
+    ],
+    "functions": {
+        "api/[...slug].ts": {
+            "maxDuration": 60
+        }
+    },
+    "routes": [
+        {
+            "handle": "filesystem"
+        },
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/[...slug]"
+        },
+        {
+            "src": "/.*",
+            "dest": "/index.html"
+        }
+    ]
+}

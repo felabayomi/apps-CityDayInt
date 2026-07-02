@@ -11,28 +11,91 @@ import { cities } from "@shared/schema";
 import { sql, eq } from "drizzle-orm";
 import { getVapidPublicKey, initVapid } from "./webpush";
 
+const INTERNATIONAL_CITY_SQL = sql`
+  COALESCE(LOWER(${cities.country}), '') NOT IN ('usa', 'united states', 'united states of america', 'u.s.a', 'u.s.')
+  AND ${cities.country} NOT ILIKE '%, USA'
+  AND ${cities.country} NOT ILIKE '%, U.S.A.'
+`;
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  const isCronAuthorized = (req: any) => {
+    // Vercel cron requests include x-vercel-cron-schedule and vercel-cron/1.0 user-agent.
+    // Keep compatibility with older x-vercel-cron behavior.
+    const hasVercelCronHeader = Boolean(
+      req.headers["x-vercel-cron"] || req.headers["x-vercel-cron-schedule"]
+    );
+    const userAgent = String(req.headers["user-agent"] || "").toLowerCase();
+    const isVercelCronUserAgent = userAgent.includes("vercel-cron/");
+    if (hasVercelCronHeader || isVercelCronUserAgent) {
+      return true;
+    }
+
+    const configuredSecret = String(process.env.CRON_SECRET || "").trim();
+    if (!configuredSecret) {
+      return false;
+    }
+
+    const authHeader = String(req.headers["authorization"] || "").trim();
+    if (authHeader === `Bearer ${configuredSecret}`) {
+      return true;
+    }
+
+    const providedSecret =
+      String(req.headers["x-cron-secret"] || req.query?.secret || "").trim();
+    return providedSecret === configuredSecret;
+  };
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      res.json({
+        id: req.user?.claims?.sub,
+        email: req.user?.email,
+        isAdmin: Boolean(req.user?.isAdmin),
+        isPremium: false,
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
+  // Cron routes (serverless-safe replacement for in-process node-cron in production)
+  app.get('/api/cron/generate-tomorrow', async (req: any, res) => {
+    try {
+      if (!isCronAuthorized(req)) {
+        return res.status(401).json({ message: 'Unauthorized cron invocation' });
+      }
+
+      const result = await generateTomorrowsCity();
+      res.json({ ok: true, ...result });
+    } catch (error: any) {
+      console.error('[Cron] generate-tomorrow failed:', error);
+      res.status(500).json({ message: error?.message || 'Cron generation failed' });
+    }
+  });
+
+  app.get('/api/cron/auto-publish', async (req: any, res) => {
+    try {
+      if (!isCronAuthorized(req)) {
+        return res.status(401).json({ message: 'Unauthorized cron invocation' });
+      }
+
+      const result = await autoPublishScheduledCities();
+      res.json({ ok: true, ...result });
+    } catch (error: any) {
+      console.error('[Cron] auto-publish failed:', error);
+      res.status(500).json({ message: error?.message || 'Cron publish failed' });
+    }
+  });
+
   // ── TTS: Admin-only voice generation ──────────────────────────────────────
   app.post('/api/tts/:cityId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || user.email !== 'wordofday2025@gmail.com') {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -54,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contentParts = content.map((c: any) => {
         const label = c.type === 'morning' ? 'Morning Discovery'
           : c.type === 'afternoon' ? 'Afternoon Experience'
-          : 'Evening Insight';
+            : 'Evening Insight';
         return `${label}: ${c.title}. ${c.description}`;
       });
 
@@ -92,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const content = await storage.getCityContent(city.id);
       await storage.incrementCityViews(city.id);
-      
+
       res.json({ ...city, content });
     } catch (error) {
       console.error("Error fetching today's city:", error);
@@ -122,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           content: await storage.getCityContent(city.id)
         }))
       );
-      
+
       res.json(citiesWithContent);
     } catch (error) {
       console.error("Error fetching recent cities:", error);
@@ -149,11 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Protected routes - Admin
   app.post('/api/admin/cities', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      // Simple admin check - in production you'd have proper role-based auth
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -168,23 +227,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/cities/:cityId/generate-content', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
       const { cityId } = req.params;
       const city = await storage.getCityById(cityId);
-      
+
       if (!city) {
         return res.status(404).json({ message: "City not found" });
       }
 
       // Generate AI content
       const aiContent = await generateCityContent(city.name + ', ' + city.country);
-      
+
       // Create city content records
       const contentTypes = ['morning', 'afternoon', 'evening'] as const;
       const createdContent = [];
@@ -218,10 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/admin/cities/:cityId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -255,16 +308,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/admin/content/:contentId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
       const { contentId } = req.params;
       const updateData = req.body;
-      
+
       const updatedContent = await storage.updateCityContent(contentId, updateData);
       res.json(updatedContent);
     } catch (error) {
@@ -275,10 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/cities', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -293,9 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Fetch a single city with content for admin editing (any status)
   app.get('/api/admin/cities/:cityId/detail', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
       const { cityId } = req.params;
@@ -312,9 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Scheduler status — what's scheduled for tomorrow
   app.get('/api/admin/scheduler/status', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -329,7 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select()
         .from(cities)
         .where(
-          sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published')`
+          sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published') AND ${INTERNATIONAL_CITY_SQL}`
         );
 
       if (!scheduledCity) {
@@ -347,9 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Manually trigger generation for tomorrow
   app.post('/api/admin/scheduler/generate', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -365,9 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Manually trigger auto-publish
   app.post('/api/admin/scheduler/publish-now', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -382,9 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin: list all users
   app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
       const allUsers = await storage.getAllUsers();
@@ -397,9 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin: toggle premium for a user
   app.post('/api/admin/users/:targetUserId/premium', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
       const { isPremium } = req.body;
@@ -413,9 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Approve a scheduled city immediately
   app.post('/api/admin/cities/:cityId/approve', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -433,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { cityId } = req.params;
-      
+
       await storage.saveCity(userId, cityId);
       res.json({ message: "City saved successfully" });
     } catch (error) {
@@ -446,7 +479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { cityId } = req.params;
-      
+
       await storage.unsaveCity(userId, cityId);
       res.json({ message: "City unsaved successfully" });
     } catch (error) {
@@ -470,7 +503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const savedCities = await storage.getUserSavedCities(userId);
-      
+
       // Fetch city details for each saved city
       const savedCitiesWithDetails = await Promise.all(
         savedCities.map(async (saved) => {
@@ -481,7 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         })
       );
-      
+
       res.json(savedCitiesWithDetails);
     } catch (error) {
       console.error("Error fetching saved cities:", error);
@@ -555,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const planData = insertTravelPlanSchema.parse({ ...req.body, userId });
-      
+
       const plan = await storage.createTravelPlan(planData);
       res.json(plan);
     } catch (error) {
@@ -579,13 +612,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { planId } = req.params;
-      
+
       // Verify ownership
       const plans = await storage.getUserTravelPlans(userId);
       if (!plans.find(p => p.id === planId)) {
         return res.status(403).json({ message: "Not authorized to update this plan" });
       }
-      
+
       const updatedPlan = await storage.updateTravelPlan(planId, req.body);
       res.json(updatedPlan);
     } catch (error) {
@@ -598,13 +631,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { planId } = req.params;
-      
+
       // Verify ownership
       const plans = await storage.getUserTravelPlans(userId);
       if (!plans.find(p => p.id === planId)) {
         return res.status(403).json({ message: "Not authorized to delete this plan" });
       }
-      
+
       await storage.deleteTravelPlan(planId);
       res.json({ message: "Travel plan deleted successfully" });
     } catch (error) {
@@ -628,10 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics (admin only)
   app.get('/api/admin/analytics/cities', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -645,10 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/analytics/revenue', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || (!user.email?.includes('admin') && user.email !== 'wordofday2025@gmail.com')) {
+      if (!req.user?.isAdmin) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -711,3 +738,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   return httpServer;
 }
+
+

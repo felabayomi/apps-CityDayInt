@@ -10,14 +10,23 @@ import { db } from "./db";
 import { cities } from "@shared/schema";
 import { sql, eq } from "drizzle-orm";
 import { getVapidPublicKey, initVapid } from "./webpush";
+import { ensureCityDayIntCompatibility } from "./dbCompat";
 
 const INTERNATIONAL_CITY_SQL = sql`
+  ${cities.appScope} = 'citydayint'
+  AND
   COALESCE(LOWER(${cities.country}), '') NOT IN ('usa', 'united states', 'united states of america', 'u.s.a', 'u.s.')
   AND ${cities.country} NOT ILIKE '%, USA'
   AND ${cities.country} NOT ILIKE '%, U.S.A.'
 `;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  try {
+    await ensureCityDayIntCompatibility();
+  } catch (error) {
+    console.error("[Startup] CityDayInt compatibility migration skipped:", error);
+  }
+
   // Auth middleware
   await setupAuth(app);
 

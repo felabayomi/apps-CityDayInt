@@ -7,6 +7,8 @@ import { eq, sql } from "drizzle-orm";
 import { sendPushToAll, initVapid } from "./webpush";
 
 const INTERNATIONAL_CITY_SQL = sql`
+  ${cities.appScope} = 'citydayint'
+  AND
   COALESCE(LOWER(${cities.country}), '') NOT IN ('usa', 'united states', 'united states of america', 'u.s.a', 'u.s.')
   AND ${cities.country} NOT ILIKE '%, USA'
   AND ${cities.country} NOT ILIKE '%, U.S.A.'

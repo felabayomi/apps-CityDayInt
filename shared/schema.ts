@@ -43,6 +43,7 @@ export const users = pgTable("users", {
 // Cities table
 export const cities = pgTable("cities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  appScope: varchar("app_scope"),
   slug: varchar("slug").unique(),
   name: varchar("name").notNull(),
   country: varchar("country").notNull(),

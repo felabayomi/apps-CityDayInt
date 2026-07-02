@@ -23,6 +23,8 @@ const internationalCityWhereSql = sql`
   AND ${cities.country} NOT ILIKE '%, USA'
   AND ${cities.country} NOT ILIKE '%, U.S.A.'
 `;
+const cityDayIntScopeWhere = eq(cities.appScope, "citydayint");
+const internationalScopedWhere = and(cityDayIntScopeWhere, internationalCityWhereSql);
 
 // Interface for storage operations
 export interface IStorage {
@@ -115,7 +117,7 @@ export class DatabaseStorage implements IStorage {
 
   // City operations
   async createCity(city: InsertCity): Promise<City> {
-    const [newCity] = await db.insert(cities).values(city).returning();
+    const [newCity] = await db.insert(cities).values({ ...city, appScope: "citydayint" }).returning();
     return newCity;
   }
 
@@ -123,7 +125,7 @@ export class DatabaseStorage implements IStorage {
     const [updatedCity] = await db
       .update(cities)
       .set({ ...city, updatedAt: new Date() })
-      .where(and(eq(cities.id, id), internationalCityWhereSql))
+      .where(and(eq(cities.id, id), internationalScopedWhere))
       .returning();
     return updatedCity;
   }
@@ -132,7 +134,7 @@ export class DatabaseStorage implements IStorage {
     const [city] = await db
       .select()
       .from(cities)
-      .where(and(eq(cities.id, id), internationalCityWhereSql));
+      .where(and(eq(cities.id, id), internationalScopedWhere));
     return city;
   }
 
@@ -151,7 +153,7 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(cities.status, 'published'),
           sql`${cities.publishDate} >= ${startOfDay} AND ${cities.publishDate} <= ${endOfDay}`,
-          internationalCityWhereSql
+          internationalScopedWhere
         )
       );
 
@@ -160,7 +162,7 @@ export class DatabaseStorage implements IStorage {
       const [latest] = await db
         .select()
         .from(cities)
-        .where(and(eq(cities.status, 'published'), internationalCityWhereSql))
+        .where(and(eq(cities.status, 'published'), internationalScopedWhere))
         .orderBy(desc(cities.publishDate))
         .limit(1);
       return latest;
@@ -177,7 +179,7 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(cities)
-      .where(and(eq(cities.status, 'published'), internationalCityWhereSql))
+      .where(and(eq(cities.status, 'published'), internationalScopedWhere))
       .orderBy(desc(cities.publishDate))
       .limit(limit);
   }
@@ -186,7 +188,7 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(cities)
-      .where(internationalCityWhereSql)
+      .where(internationalScopedWhere)
       .orderBy(desc(cities.createdAt));
   }
 

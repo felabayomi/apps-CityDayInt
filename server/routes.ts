@@ -6,7 +6,7 @@ import { generateCityContent, generateImageUrl, textToSpeech } from "./openai";
 import { generateTomorrowsCity, autoPublishScheduledCities } from "./scheduler";
 import { insertCitySchema, insertCityContentSchema, insertTravelPlanSchema, pushSubscriptions } from "@shared/schema";
 import { z } from "zod";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { cities } from "@shared/schema";
 import { sql, eq } from "drizzle-orm";
 import { getVapidPublicKey, initVapid } from "./webpush";
@@ -19,6 +19,17 @@ const INTERNATIONAL_CITY_SQL = sql`
   AND ${cities.country} NOT ILIKE '%, USA'
   AND ${cities.country} NOT ILIKE '%, U.S.A.'
 `;
+
+const getTodayEasternIso = () =>
+  new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+
+const getTomorrowEasternIso = () => {
+  const todayEt = getTodayEasternIso();
+  const [year, month, day] = todayEt.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day + 1)).toLocaleDateString("en-CA", {
+    timeZone: "America/New_York",
+  });
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   try {
@@ -73,6 +84,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cron routes (serverless-safe replacement for in-process node-cron in production)
+  app.get('/api/health', async (_req, res) => {
+    const hasDbEnv = Boolean(
+      String(process.env.CITYDAYINT_DATABASE_URL || process.env.DATABASE_URL || "").trim(),
+    );
+    const hasOpenAiEnv = Boolean(
+      String(process.env.CITYDAYINT_OPENAI_API_KEY || process.env.OPENAI_API_KEY || "").trim(),
+    );
+
+    let dbConnected = false;
+    let citiesTableExists = false;
+    let todayPublishedCount = 0;
+    let tomorrowScheduledCount = 0;
+    let dbError: string | null = null;
+
+    try {
+      await pool.query("select 1");
+      dbConnected = true;
+
+      const tableCheck = await pool.query("select to_regclass('public.cities') as table_name");
+      citiesTableExists = Boolean(tableCheck.rows?.[0]?.table_name);
+
+      if (citiesTableExists) {
+        const todayEt = getTodayEasternIso();
+        const tomorrowEt = getTomorrowEasternIso();
+
+        const readiness = await pool.query(
+          `
+            select
+              count(*) filter (
+                where app_scope = 'citydayint'
+                  and status = 'published'
+                  and (publish_date at time zone 'America/New_York')::date = $1::date
+              )::int as today_published,
+              count(*) filter (
+                where app_scope = 'citydayint'
+                  and status = 'scheduled'
+                  and (publish_date at time zone 'America/New_York')::date = $2::date
+              )::int as tomorrow_scheduled
+            from public.cities
+          `,
+          [todayEt, tomorrowEt],
+        );
+
+        todayPublishedCount = readiness.rows?.[0]?.today_published ?? 0;
+        tomorrowScheduledCount = readiness.rows?.[0]?.tomorrow_scheduled ?? 0;
+      }
+    } catch (error: any) {
+      dbError = error?.message || "DB health check failed";
+    }
+
+    const cronReadinessOk = todayPublishedCount > 0 && tomorrowScheduledCount > 0;
+    const ok = hasDbEnv && hasOpenAiEnv && dbConnected && citiesTableExists && cronReadinessOk;
+
+    res.status(ok ? 200 : 503).json({
+      ok,
+      service: "citydayint",
+      checks: {
+        env: {
+          ok: hasDbEnv && hasOpenAiEnv,
+          hasDatabaseUrl: hasDbEnv,
+          hasOpenAiKey: hasOpenAiEnv,
+        },
+        db: { ok: dbConnected, error: dbError },
+        schema: { ok: citiesTableExists, table: "cities" },
+        cronReadiness: {
+          ok: cronReadinessOk,
+          todayDate: getTodayEasternIso(),
+          tomorrowDate: getTomorrowEasternIso(),
+          todayPublishedCount,
+          tomorrowScheduledCount,
+          expected: {
+            todayPublishedMin: 1,
+            tomorrowScheduledMin: 1,
+          },
+        },
+      },
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   app.get('/api/cron/generate-tomorrow', async (req: any, res) => {
     try {
       if (!isCronAuthorized(req)) {

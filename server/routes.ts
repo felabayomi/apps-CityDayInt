@@ -289,6 +289,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { cityId } = req.params;
       const rawData = req.body;
+      const existingCity = await storage.getCityById(cityId);
+      if (!existingCity) {
+        return res.status(404).json({ message: "City not found" });
+      }
 
       // Sanitize update payload — convert publishDate string → Date, strip undefined
       const updateData: Record<string, any> = {};
@@ -300,14 +304,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (rawData.status !== undefined) updateData.status = rawData.status;
       if (rawData.slug !== undefined) updateData.slug = rawData.slug;
       if (rawData.publishDate !== undefined && rawData.publishDate !== null && rawData.publishDate !== '') {
-        const d = new Date(rawData.publishDate);
-        if (!isNaN(d.getTime())) updateData.publishDate = d;
+        const rawPublishDate = String(rawData.publishDate).trim();
+        const dateOnlyMatch = rawPublishDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+        if (dateOnlyMatch) {
+          const year = Number(dateOnlyMatch[1]);
+          const month = Number(dateOnlyMatch[2]);
+          const day = Number(dateOnlyMatch[3]);
+          const existingHour = existingCity.publishDate ? existingCity.publishDate.getUTCHours() : 14;
+          const existingMinute = existingCity.publishDate ? existingCity.publishDate.getUTCMinutes() : 0;
+          updateData.publishDate = new Date(Date.UTC(year, month - 1, day, existingHour, existingMinute, 0, 0));
+        } else {
+          const d = new Date(rawPublishDate);
+          if (!isNaN(d.getTime())) updateData.publishDate = d;
+        }
       }
 
       const updatedCity = await storage.updateCity(cityId, updateData);
-      if (!updatedCity) {
-        return res.status(404).json({ message: "City not found" });
-      }
       res.json(updatedCity);
     } catch (error: any) {
       console.error("Error updating city:", error);

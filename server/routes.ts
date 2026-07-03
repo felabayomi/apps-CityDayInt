@@ -26,9 +26,11 @@ const getTodayEasternIso = () =>
 const getTomorrowEasternIso = () => {
   const todayEt = getTodayEasternIso();
   const [year, month, day] = todayEt.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, day + 1)).toLocaleDateString("en-CA", {
-    timeZone: "America/New_York",
-  });
+  const tomorrowUtcMidnight = new Date(Date.UTC(year, month - 1, day + 1, 0, 0, 0, 0));
+  const y = tomorrowUtcMidnight.getUTCFullYear();
+  const m = String(tomorrowUtcMidnight.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(tomorrowUtcMidnight.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {

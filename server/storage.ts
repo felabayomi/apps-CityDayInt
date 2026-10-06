@@ -139,12 +139,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCityByDate(date: Date): Promise<City | undefined> {
-    // Use UTC date boundaries to avoid timezone issues on Vercel (always UTC)
-    const utcYear = date.getUTCFullYear();
-    const utcMonth = date.getUTCMonth();
-    const utcDay = date.getUTCDate();
-    const startOfDay = new Date(Date.UTC(utcYear, utcMonth, utcDay, 0, 0, 0, 0));
-    const endOfDay = new Date(Date.UTC(utcYear, utcMonth, utcDay, 23, 59, 59, 999));
+    // The daily publication calendar is anchored to America/New_York.
+    const easternDate = date.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
 
     const [city] = await db
       .select()
@@ -152,22 +148,14 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(cities.status, 'published'),
-          sql`${cities.publishDate} >= ${startOfDay} AND ${cities.publishDate} <= ${endOfDay}`,
+          sql`(${cities.publishDate} at time zone 'America/New_York')::date = ${easternDate}::date`,
           internationalScopedWhere
         )
-      );
+      )
+      .orderBy(desc(cities.publishDate))
+      .limit(1);
 
-    // Fallback: return the most recently published city if none matches today exactly
-    if (!city) {
-      const [latest] = await db
-        .select()
-        .from(cities)
-        .where(and(eq(cities.status, 'published'), internationalScopedWhere))
-        .orderBy(desc(cities.publishDate))
-        .limit(1);
-      return latest;
-    }
-
+    // Do not mask a missed publication by returning stale content.
     return city;
   }
 

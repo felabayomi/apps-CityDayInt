@@ -161,11 +161,10 @@ async function hasCityForToday(): Promise<boolean> {
 async function generateAndPublishTodaysCity(): Promise<void> {
   try {
     console.log("[Scheduler] Today has no city — generating and publishing one now...");
-    const usedNames = await getUsedCityNames();
-    const destination = pickNextCity(usedNames);
+    const destination = await pickNextDestination();
 
     if (!destination) {
-      console.log("[Scheduler] All destinations exhausted. Cannot generate today's city.");
+      console.log("[Scheduler] No eligible destination is available for today's city.");
       return;
     }
 
@@ -218,12 +217,34 @@ async function getUsedCityNames(): Promise<Set<string>> {
   return new Set(allCities.map((c) => c.name.toLowerCase()));
 }
 
+async function getRecentlyUsedCityNames(limit = 14): Promise<Set<string>> {
+  const allCities = await storage.getAllCities();
+  return new Set(allCities.slice(0, limit).map((c) => c.name.toLowerCase()));
+}
+
 function pickNextCity(usedNames: Set<string>): typeof DESTINATION_POOL[0] | null {
   const available = DESTINATION_POOL.filter(
     (d) => !usedNames.has(d.name.toLowerCase())
   );
   if (available.length === 0) return null;
   return available[Math.floor(Math.random() * available.length)];
+}
+
+async function pickNextDestination(): Promise<typeof DESTINATION_POOL[0] | null> {
+  const usedNames = await getUsedCityNames();
+  const unusedDestination = pickNextCity(usedNames);
+  if (unusedDestination) return unusedDestination;
+
+  // A completed rotation must not permanently stop daily publishing.
+  // Start a new cycle while keeping recently featured cities out of the draw.
+  const recentNames = await getRecentlyUsedCityNames();
+  const recycledDestination = pickNextCity(recentNames);
+
+  if (recycledDestination) {
+    console.log("[Scheduler] Destination pool completed. Starting a new rotation.");
+  }
+
+  return recycledDestination;
 }
 
 async function hasCityScheduledForTomorrow(): Promise<boolean> {
@@ -268,12 +289,11 @@ export async function generateTomorrowsCity(force = false): Promise<{ success: b
       console.log("[Scheduler] Deleted. Proceeding with fresh generation...");
     }
 
-    const usedNames = await getUsedCityNames();
-    const destination = pickNextCity(usedNames);
+    const destination = await pickNextDestination();
 
     if (!destination) {
-      console.log("[Scheduler] All destinations have been used. Resetting pool is needed.");
-      return { success: false, message: "All destinations exhausted. Please reset or expand the pool." };
+      console.log("[Scheduler] No eligible destination is available.");
+      return { success: false, message: "No eligible destination is available." };
     }
 
     console.log(`[Scheduler] Generating content for ${destination.name}, ${destination.country}...`);

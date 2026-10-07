@@ -14,6 +14,7 @@ import Archive from "@/pages/archive";
 import CityPage from "@/pages/city";
 import Admin from "@/pages/admin";
 import Analytics from "@/pages/analytics";
+import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -32,6 +33,7 @@ function Router() {
           ) : (
             <Route path="/" component={Home} />
           )}
+          <Route path="/auth" component={Auth} />
           <Route path="/archive" component={Archive} />
           <Route path="/city/:id" component={CityPage} />
           <Route path="/library" component={Library} />

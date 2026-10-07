@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
   Globe, Wand2, Eye, Edit, Save, Calendar, Sun, Utensils, Moon,
-  CheckCircle, Clock, BookOpen, Send, Zap, RefreshCw, CalendarCheck
+  CheckCircle, Clock, BookOpen, Send, Zap, RefreshCw, CalendarCheck, Trash2
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
@@ -239,6 +239,49 @@ export default function Admin() {
     }
   };
 
+  const deleteCityMutation = useMutation({
+    mutationFn: async ({ cityId }: { cityId: string }) => {
+      const res = await apiRequest('DELETE', `/api/admin/cities/${cityId}`);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/cities'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scheduler/status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cities/today'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cities/archive'] });
+
+      setSelectedCityId('');
+      setEditingCityMeta(null);
+      setContentTabs([]);
+      setGeneratedContent(null);
+      setActiveTab('manage');
+
+      toast({
+        title: "City Deleted",
+        description: data.message || "City deleted successfully.",
+      });
+    },
+    onError: (e: Error) => {
+      toast({
+        title: "Delete Failed",
+        description: e.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteCity = () => {
+    if (!selectedCityId || !editingCityMeta) return;
+
+    const confirmed = window.confirm(
+      `Delete ${editingCityMeta.name}, ${editingCityMeta.country}?\n\n` +
+      `This permanently removes this city and its associated content. This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    deleteCityMutation.mutate({ cityId: selectedCityId });
+  };
   const saveCityMetaMutation = useMutation({
     mutationFn: async ({ cityId, data }: { cityId: string; data: any }) => {
       await apiRequest('PUT', `/api/admin/cities/${cityId}`, data);
@@ -808,7 +851,19 @@ export default function Admin() {
           {editingCityMeta && selectedCityId && (
             <Card className="p-6 mb-4">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <h2 className="text-lg font-bold text-foreground">City Details</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-foreground">City Details</h2>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={handleDeleteCity}
+                    disabled={deleteCityMutation.isPending}
+                    data-testid="button-delete-city"
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    {deleteCityMutation.isPending ? 'Deleting...' : 'Delete City'}
+                  </Button>
+                </div>
                 <Button
                   size="sm"
                   onClick={() => saveCityMetaMutation.mutate({

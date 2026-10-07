@@ -36,6 +36,7 @@ export interface IStorage {
   // City operations
   createCity(city: InsertCity): Promise<City>;
   updateCity(id: string, city: Partial<InsertCity>): Promise<City>;
+  deleteCity(id: string): Promise<boolean>;
   getCityById(id: string): Promise<City | undefined>;
   getCityByDate(date: Date): Promise<City | undefined>;
   getTodaysCity(): Promise<City | undefined>;
@@ -130,6 +131,14 @@ export class DatabaseStorage implements IStorage {
     return updatedCity;
   }
 
+  async deleteCity(id: string): Promise<boolean> {
+    const deleted = await db
+      .delete(cities)
+      .where(and(eq(cities.id, id), internationalScopedWhere))
+      .returning({ id: cities.id });
+
+    return deleted.length > 0;
+  }
   async getCityById(id: string): Promise<City | undefined> {
     const [city] = await db
       .select()

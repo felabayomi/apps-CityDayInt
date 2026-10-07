@@ -458,6 +458,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/admin/cities/:cityId', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!req.user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { cityId } = req.params;
+      const city = await storage.getCityById(cityId);
+
+      if (!city) {
+        return res.status(404).json({ message: "City not found" });
+      }
+
+      const deleted = await storage.deleteCity(cityId);
+
+      if (!deleted) {
+        return res.status(404).json({ message: "City not found" });
+      }
+
+      console.log(`[Admin] Deleted city: ${city.name}, ${city.country} (${cityId})`);
+
+      res.json({
+        success: true,
+        message: `${city.name}, ${city.country} deleted successfully`,
+      });
+    } catch (error: any) {
+      console.error("Error deleting city:", error);
+      res.status(500).json({ message: error.message || "Failed to delete city" });
+    }
+  });
   app.put('/api/admin/content/:contentId', isAuthenticated, async (req: any, res) => {
     try {
       if (!req.user?.isAdmin) {

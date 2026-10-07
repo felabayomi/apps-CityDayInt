@@ -172,6 +172,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Unauthorized cron invocation' });
       }
 
+      const easternHour = Number(
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/New_York",
+          hour: "2-digit",
+          hourCycle: "h23",
+        }).format(new Date())
+      );
+
+      if (easternHour !== 15) {
+        console.log(
+          `[Cron] generate-tomorrow skipped because Eastern hour is ${easternHour}, not 15`
+        );
+        return res.json({
+          ok: true,
+          skipped: true,
+          reason: "Outside 3 PM America/New_York execution window",
+        });
+      }
+
       const result = await generateTomorrowsCity();
       res.json({ ok: true, ...result });
     } catch (error: any) {
@@ -186,6 +205,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Unauthorized cron invocation' });
       }
 
+      const easternHour = Number(
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/New_York",
+          hour: "2-digit",
+          hourCycle: "h23",
+        }).format(new Date())
+      );
+
+      if (easternHour !== 9) {
+        console.log(
+          `[Cron] auto-publish skipped because Eastern hour is ${easternHour}, not 9`
+        );
+        return res.json({
+          ok: true,
+          skipped: true,
+          reason: "Outside 9 AM America/New_York execution window",
+        });
+      }
+
       const result = await autoPublishScheduledCities();
       res.json({ ok: true, ...result });
     } catch (error: any) {
@@ -193,7 +231,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error?.message || 'Cron publish failed' });
     }
   });
-
   // ── TTS: Admin-only voice generation ──────────────────────────────────────
   app.post('/api/tts/:cityId', isAuthenticated, async (req: any, res) => {
     try {

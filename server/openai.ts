@@ -183,3 +183,100 @@ export async function analyzeCityImage(base64Image: string): Promise<string> {
     return "Image analysis not available";
   }
 }
+
+export interface TravelDestination {
+  name: string;
+  country: string;
+  region: string;
+}
+
+export async function selectInternationalTravelDestination(
+  usedDestinations: string[]
+): Promise<TravelDestination> {
+  const exclusions = usedDestinations
+    .map((name) => String(name || "").trim())
+    .filter(Boolean)
+    .slice(0, 5000);
+
+  const prompt = `Select ONE real international travel destination for the next Daily Felix - City of the Day International feature.
+
+PRODUCT PURPOSE:
+Daily Felix is trying to inspire international travel. Choose a destination that gives travelers a genuine reason to consider visiting or booking a trip.
+
+A qualifying destination can be:
+- a major tourism city
+- a culturally or historically significant destination
+- an island or beach destination
+- a resort destination
+- a food, arts, nightlife, shopping, pilgrimage, wellness, or festival destination
+- a nature or adventure gateway
+- an established or emerging international tourism destination
+
+RULES:
+1. The destination must be outside the United States.
+2. It must be a real destination that international leisure travelers plausibly visit.
+3. Do not choose an arbitrary municipality merely because it exists.
+4. Prefer destinations with meaningful visitor experiences, attractions, culture, scenery, food, history, recreation, or tourism infrastructure.
+5. Do not repeat ANY destination in the exclusion list below.
+6. Return the commonly recognized travel-destination name.
+7. Return the sovereign country name in "country".
+8. "region" must be one of: Europe, Asia, Africa, Middle East, Americas, Oceania, Caribbean.
+9. Return JSON only, exactly in this form:
+{"name":"Destination","country":"Country","region":"Region"}
+
+ALREADY FEATURED - DO NOT SELECT:
+${exclusions.length ? exclusions.join("\n") : "None yet"}`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are the destination editor for an international travel discovery publication. Select compelling, real travel destinations with strong tourism relevance. Never knowingly repeat a destination supplied in the exclusion list. Respond only with valid JSON.",
+      },
+      { role: "user", content: prompt },
+    ],
+    response_format: { type: "json_object" },
+    temperature: 1,
+  });
+
+  const raw = response.choices[0]?.message?.content;
+  if (!raw) {
+    throw new Error("No destination returned by OpenAI");
+  }
+
+  const parsed = JSON.parse(raw) as TravelDestination;
+
+  if (!parsed.name?.trim() || !parsed.country?.trim() || !parsed.region?.trim()) {
+    throw new Error("OpenAI returned an incomplete travel destination");
+  }
+
+  const usNames = new Set([
+    "usa",
+    "united states",
+    "united states of america",
+    "u.s.a",
+    "u.s.",
+  ]);
+
+  if (usNames.has(parsed.country.trim().toLowerCase())) {
+    throw new Error("OpenAI selected a United States destination");
+  }
+
+  const normalizedUsed = new Set(
+    exclusions.map((name) => name.toLowerCase())
+  );
+
+  if (normalizedUsed.has(parsed.name.trim().toLowerCase())) {
+    throw new Error(
+      `OpenAI selected an already-featured destination: ${parsed.name}`
+    );
+  }
+
+  return {
+    name: parsed.name.trim(),
+    country: parsed.country.trim(),
+    region: parsed.region.trim(),
+  };
+}

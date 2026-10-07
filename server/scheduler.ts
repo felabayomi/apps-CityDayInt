@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { storage } from "./storage";
-import { generateCityContent } from "./openai";
+import { generateCityContent, selectInternationalTravelDestination, type TravelDestination } from "./openai";
 import { db } from "./db";
 import { cities } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
@@ -19,113 +19,6 @@ const isUsCountryName = (country: string) => {
   return ["usa", "united states", "united states of america", "u.s.a", "u.s."].includes(normalized);
 };
 
-// 100+ popular international tourist destinations to rotate through
-const DESTINATION_POOL = [
-  // Europe
-  { name: "Paris", country: "France", region: "Europe" },
-  { name: "Rome", country: "Italy", region: "Europe" },
-  { name: "Barcelona", country: "Spain", region: "Europe" },
-  { name: "Amsterdam", country: "Netherlands", region: "Europe" },
-  { name: "Prague", country: "Czech Republic", region: "Europe" },
-  { name: "Vienna", country: "Austria", region: "Europe" },
-  { name: "Santorini", country: "Greece", region: "Europe" },
-  { name: "Dubrovnik", country: "Croatia", region: "Europe" },
-  { name: "Edinburgh", country: "Scotland", region: "Europe" },
-  { name: "Lisbon", country: "Portugal", region: "Europe" },
-  { name: "Budapest", country: "Hungary", region: "Europe" },
-  { name: "Copenhagen", country: "Denmark", region: "Europe" },
-  { name: "Stockholm", country: "Sweden", region: "Europe" },
-  { name: "Bruges", country: "Belgium", region: "Europe" },
-  { name: "Florence", country: "Italy", region: "Europe" },
-  { name: "Venice", country: "Italy", region: "Europe" },
-  { name: "Athens", country: "Greece", region: "Europe" },
-  { name: "Reykjavik", country: "Iceland", region: "Europe" },
-  { name: "Porto", country: "Portugal", region: "Europe" },
-  { name: "Seville", country: "Spain", region: "Europe" },
-  { name: "Zurich", country: "Switzerland", region: "Europe" },
-  { name: "Munich", country: "Germany", region: "Europe" },
-  { name: "Berlin", country: "Germany", region: "Europe" },
-  { name: "Madrid", country: "Spain", region: "Europe" },
-  { name: "London", country: "United Kingdom", region: "Europe" },
-  { name: "Dublin", country: "Ireland", region: "Europe" },
-  { name: "Oslo", country: "Norway", region: "Europe" },
-  { name: "Tallinn", country: "Estonia", region: "Europe" },
-  { name: "Valletta", country: "Malta", region: "Europe" },
-  { name: "Monaco", country: "Monaco", region: "Europe" },
-
-  // Asia
-  { name: "Tokyo", country: "Japan", region: "Asia" },
-  { name: "Kyoto", country: "Japan", region: "Asia" },
-  { name: "Bali", country: "Indonesia", region: "Asia" },
-  { name: "Bangkok", country: "Thailand", region: "Asia" },
-  { name: "Singapore", country: "Singapore", region: "Asia" },
-  { name: "Hong Kong", country: "China", region: "Asia" },
-  { name: "Hanoi", country: "Vietnam", region: "Asia" },
-  { name: "Ho Chi Minh City", country: "Vietnam", region: "Asia" },
-  { name: "Chiang Mai", country: "Thailand", region: "Asia" },
-  { name: "Kathmandu", country: "Nepal", region: "Asia" },
-  { name: "Colombo", country: "Sri Lanka", region: "Asia" },
-  { name: "Luang Prabang", country: "Laos", region: "Asia" },
-  { name: "Siem Reap", country: "Cambodia", region: "Asia" },
-  { name: "Osaka", country: "Japan", region: "Asia" },
-  { name: "Seoul", country: "South Korea", region: "Asia" },
-  { name: "Taipei", country: "Taiwan", region: "Asia" },
-  { name: "Kuala Lumpur", country: "Malaysia", region: "Asia" },
-  { name: "Shanghai", country: "China", region: "Asia" },
-  { name: "Beijing", country: "China", region: "Asia" },
-  { name: "Mumbai", country: "India", region: "Asia" },
-  { name: "Jaipur", country: "India", region: "Asia" },
-  { name: "Udaipur", country: "India", region: "Asia" },
-  { name: "Istanbul", country: "Turkey", region: "Asia" },
-  { name: "Muscat", country: "Oman", region: "Asia" },
-  { name: "Dubai", country: "UAE", region: "Asia" },
-  { name: "Petra", country: "Jordan", region: "Asia" },
-  { name: "Tbilisi", country: "Georgia", region: "Asia" },
-  { name: "Yerevan", country: "Armenia", region: "Asia" },
-
-  // Americas
-  { name: "Havana", country: "Cuba", region: "Americas" },
-  { name: "Mexico City", country: "Mexico", region: "Americas" },
-  { name: "Oaxaca", country: "Mexico", region: "Americas" },
-  { name: "Cartagena", country: "Colombia", region: "Americas" },
-  { name: "Buenos Aires", country: "Argentina", region: "Americas" },
-  { name: "Rio de Janeiro", country: "Brazil", region: "Americas" },
-  { name: "Lima", country: "Peru", region: "Americas" },
-  { name: "Cusco", country: "Peru", region: "Americas" },
-  { name: "Medellín", country: "Colombia", region: "Americas" },
-  { name: "Bogotá", country: "Colombia", region: "Americas" },
-  { name: "Santiago", country: "Chile", region: "Americas" },
-  { name: "Montevideo", country: "Uruguay", region: "Americas" },
-  { name: "Quebec City", country: "Canada", region: "Americas" },
-  { name: "Vancouver", country: "Canada", region: "Americas" },
-  { name: "Montreal", country: "Canada", region: "Americas" },
-  { name: "San José", country: "Costa Rica", region: "Americas" },
-  { name: "Panama City", country: "Panama", region: "Americas" },
-  { name: "Quito", country: "Ecuador", region: "Americas" },
-
-  // Africa & Middle East
-  { name: "Marrakech", country: "Morocco", region: "Africa" },
-  { name: "Cape Town", country: "South Africa", region: "Africa" },
-  { name: "Cairo", country: "Egypt", region: "Africa" },
-  { name: "Nairobi", country: "Kenya", region: "Africa" },
-  { name: "Zanzibar", country: "Tanzania", region: "Africa" },
-  { name: "Fez", country: "Morocco", region: "Africa" },
-  { name: "Casablanca", country: "Morocco", region: "Africa" },
-  { name: "Accra", country: "Ghana", region: "Africa" },
-  { name: "Addis Ababa", country: "Ethiopia", region: "Africa" },
-  { name: "Tel Aviv", country: "Israel", region: "Africa" },
-  { name: "Jerusalem", country: "Israel", region: "Africa" },
-
-  // Oceania
-  { name: "Sydney", country: "Australia", region: "Oceania" },
-  { name: "Melbourne", country: "Australia", region: "Oceania" },
-  { name: "Auckland", country: "New Zealand", region: "Oceania" },
-  { name: "Queenstown", country: "New Zealand", region: "Oceania" },
-  { name: "Fiji", country: "Fiji", region: "Oceania" },
-  { name: "Papeete", country: "French Polynesia", region: "Oceania" },
-  { name: "Cairns", country: "Australia", region: "Oceania" },
-].filter((destination) => !isUsCountryName(destination.country));
-
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -133,31 +26,101 @@ function slugify(text: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
-// Get tomorrow's date at 9am EST (14:00 UTC)
-function getTomorrowPublishDate(): Date {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setUTCHours(14, 0, 0, 0); // 9am EST = 14:00 UTC
-  return tomorrow;
+const EASTERN_TIME_ZONE = "America/New_York";
+
+function getEasternDateString(date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: EASTERN_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  const get = (type: string) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
+function addDaysToDateString(dateString: string, days: number): string {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + days, 12, 0, 0));
+
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, "0"),
+    String(date.getUTCDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function getEasternUtcOffsetMs(date: Date): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: EASTERN_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  const value = (type: string) =>
+    Number(parts.find((part) => part.type === type)?.value ?? 0);
+
+  const asUtc = Date.UTC(
+    value("year"),
+    value("month") - 1,
+    value("day"),
+    value("hour"),
+    value("minute"),
+    value("second")
+  );
+
+  return asUtc - date.getTime();
+}
+
+function easternDateTimeToUtc(
+  dateString: string,
+  hour: number,
+  minute = 0
+): Date {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const wallClockAsUtc = Date.UTC(year, month - 1, day, hour, minute, 0);
+
+  // Probe the target date so DST is handled automatically.
+  const probe = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  const offset = getEasternUtcOffsetMs(probe);
+
+  return new Date(wallClockAsUtc - offset);
+}
+
+function getTodayEasternDate(): string {
+  return getEasternDateString();
+}
+
+function getTomorrowEasternDate(): string {
+  return addDaysToDateString(getTodayEasternDate(), 1);
+}
+
+function getTomorrowPublishDate(): Date {
+  return easternDateTimeToUtc(getTomorrowEasternDate(), 9);
+}
 async function hasCityForToday(): Promise<boolean> {
-  const now = new Date();
-  const startOfToday = new Date(now);
-  startOfToday.setUTCHours(0, 0, 0, 0);
-  const endOfToday = new Date(now);
-  endOfToday.setUTCHours(23, 59, 59, 999);
+  const todayEastern = getTodayEasternDate();
 
   const [existing] = await db
     .select()
     .from(cities)
     .where(
-      sql`${cities.publishDate} >= ${startOfToday} AND ${cities.publishDate} <= ${endOfToday} AND ${cities.status} IN ('scheduled', 'published') AND ${INTERNATIONAL_CITY_SQL}`
-    );
+      sql`(${cities.publishDate} AT TIME ZONE 'America/New_York')::date = ${todayEastern}::date
+          AND ${cities.status} IN ('scheduled', 'published')
+          AND ${INTERNATIONAL_CITY_SQL}`
+    )
+    .limit(1);
 
   return !!existing;
 }
-
 async function generateAndPublishTodaysCity(): Promise<void> {
   try {
     console.log("[Scheduler] Today has no city — generating and publishing one now...");
@@ -212,59 +175,86 @@ async function generateAndPublishTodaysCity(): Promise<void> {
   }
 }
 
-async function getUsedCityNames(): Promise<Set<string>> {
+async function getUsedDestinationNames(): Promise<string[]> {
   const allCities = await storage.getAllCities();
-  return new Set(allCities.map((c) => c.name.toLowerCase()));
-}
 
-async function getRecentlyUsedCityNames(limit = 14): Promise<Set<string>> {
-  const allCities = await storage.getAllCities();
-  return new Set(allCities.slice(0, limit).map((c) => c.name.toLowerCase()));
-}
-
-function pickNextCity(usedNames: Set<string>): typeof DESTINATION_POOL[0] | null {
-  const available = DESTINATION_POOL.filter(
-    (d) => !usedNames.has(d.name.toLowerCase())
+  return Array.from(
+    new Set(
+      allCities
+        .filter(
+          (city) =>
+            city.appScope === "citydayint" &&
+            !isUsCountryName(city.country || "")
+        )
+        .map((city) => city.name?.trim())
+        .filter((name): name is string => Boolean(name))
+    )
   );
-  if (available.length === 0) return null;
-  return available[Math.floor(Math.random() * available.length)];
 }
 
-async function pickNextDestination(): Promise<typeof DESTINATION_POOL[0] | null> {
-  const usedNames = await getUsedCityNames();
-  const unusedDestination = pickNextCity(usedNames);
-  if (unusedDestination) return unusedDestination;
+async function pickNextDestination(): Promise<TravelDestination | null> {
+  const usedNames = await getUsedDestinationNames();
+  const normalizedUsed = new Set(
+    usedNames.map((name) => name.toLowerCase())
+  );
 
-  // A completed rotation must not permanently stop daily publishing.
-  // Start a new cycle while keeping recently featured cities out of the draw.
-  const recentNames = await getRecentlyUsedCityNames();
-  const recycledDestination = pickNextCity(recentNames);
+  // AI proposes a real international travel destination.
+  // The server independently verifies that it has never been featured.
+  // Retry a few times rather than ever intentionally recycling a destination.
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      const destination =
+        await selectInternationalTravelDestination(usedNames);
 
-  if (recycledDestination) {
-    console.log("[Scheduler] Destination pool completed. Starting a new rotation.");
+      const normalizedName = destination.name.trim().toLowerCase();
+
+      if (normalizedUsed.has(normalizedName)) {
+        console.warn(
+          `[Scheduler] AI proposed already-featured destination "${destination.name}" on attempt ${attempt}. Retrying...`
+        );
+        continue;
+      }
+
+      if (isUsCountryName(destination.country)) {
+        console.warn(
+          `[Scheduler] AI proposed U.S. destination "${destination.name}, ${destination.country}" on attempt ${attempt}. Retrying...`
+        );
+        continue;
+      }
+
+      console.log(
+        `[Scheduler] Selected new international travel destination: ${destination.name}, ${destination.country}`
+      );
+
+      return destination;
+    } catch (error: any) {
+      console.warn(
+        `[Scheduler] Destination selection attempt ${attempt} failed: ${error.message}`
+      );
+    }
   }
 
-  return recycledDestination;
-}
+  console.error(
+    "[Scheduler] Could not select a new international travel destination after 5 attempts."
+  );
 
+  return null;
+}
 async function hasCityScheduledForTomorrow(): Promise<boolean> {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const startOfTomorrow = new Date(tomorrow);
-  startOfTomorrow.setUTCHours(0, 0, 0, 0);
-  const endOfTomorrow = new Date(tomorrow);
-  endOfTomorrow.setUTCHours(23, 59, 59, 999);
+  const tomorrowEastern = getTomorrowEasternDate();
 
   const [existing] = await db
     .select()
     .from(cities)
     .where(
-      sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published') AND ${INTERNATIONAL_CITY_SQL}`
-    );
+      sql`(${cities.publishDate} AT TIME ZONE 'America/New_York')::date = ${tomorrowEastern}::date
+          AND ${cities.status} IN ('scheduled', 'published')
+          AND ${INTERNATIONAL_CITY_SQL}`
+    )
+    .limit(1);
 
   return !!existing;
 }
-
 export async function generateTomorrowsCity(force = false): Promise<{ success: boolean; message: string; city?: any }> {
   try {
     console.log("[Scheduler] Checking if tomorrow already has a city...");
@@ -277,14 +267,12 @@ export async function generateTomorrowsCity(force = false): Promise<{ success: b
       }
       // Force mode: delete the existing scheduled city and regenerate
       console.log("[Scheduler] Force regenerate — deleting existing scheduled city for tomorrow...");
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const startOfTomorrow = new Date(tomorrow);
-      startOfTomorrow.setUTCHours(0, 0, 0, 0);
-      const endOfTomorrow = new Date(tomorrow);
-      endOfTomorrow.setUTCHours(23, 59, 59, 999);
+      const tomorrowEastern = getTomorrowEasternDate();
+
       await db.delete(cities).where(
-        sql`${cities.publishDate} >= ${startOfTomorrow} AND ${cities.publishDate} <= ${endOfTomorrow} AND ${cities.status} IN ('scheduled', 'published') AND ${INTERNATIONAL_CITY_SQL}`
+        sql`(${cities.publishDate} AT TIME ZONE 'America/New_York')::date = ${tomorrowEastern}::date
+            AND ${cities.status} IN ('scheduled', 'published')
+            AND ${INTERNATIONAL_CITY_SQL}`
       );
       console.log("[Scheduler] Deleted. Proceeding with fresh generation...");
     }
@@ -397,20 +385,20 @@ export function startScheduler() {
     console.log(`[Scheduler] Startup check result: ${result.message}`);
   }, 3000); // small delay so DB is ready
 
-  // Generate tomorrow's city at 3pm EST (20:00 UTC) every day
-  cron.schedule("0 20 * * *", async () => {
+  // Generate tomorrow's city at 3 PM America/New_York every day
+  cron.schedule("0 15 * * *", async () => {
     console.log("[Scheduler] Daily generation job triggered");
     await generateTomorrowsCity();
-  }, { timezone: "UTC" });
+  }, { timezone: EASTERN_TIME_ZONE });
 
-  // Auto-publish at 9am EST (14:00 UTC) every day
-  cron.schedule("0 14 * * *", async () => {
+  // Auto-publish at 9 AM America/New_York every day
+  cron.schedule("0 9 * * *", async () => {
     console.log("[Scheduler] Daily auto-publish job triggered");
     await autoPublishScheduledCities();
-  }, { timezone: "UTC" });
+  }, { timezone: EASTERN_TIME_ZONE });
 
-  // Evening reminder at 7pm EST (00:00 UTC next day) — remind users to read today's city
-  cron.schedule("0 0 * * *", async () => {
+  // Evening reminder at 7 PM America/New_York — remind users to read today's city
+  cron.schedule("0 19 * * *", async () => {
     console.log("[Scheduler] Evening reminder push triggered");
     try {
       const todayCity = await storage.getTodaysCity();
@@ -424,7 +412,7 @@ export function startScheduler() {
     } catch (err: any) {
       console.error("[Scheduler] Evening reminder push failed:", err.message);
     }
-  }, { timezone: "UTC" });
+  }, { timezone: EASTERN_TIME_ZONE });
 
-  console.log("[Scheduler] Started — generate at 3pm EST, auto-publish at 9am EST");
+  console.log("[Scheduler] Started — generate at 3 PM Eastern, auto-publish at 9 AM Eastern");
 }

@@ -106,12 +106,21 @@ export default function Landing() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open('https://schedez.io/', '_blank')}
+                onClick={() => window.open('https://appointment.expeditionamerica.us/', '_blank', 'noopener,noreferrer')}
                 data-testid="button-travel-expert"
                 className="flex items-center gap-1.5"
               >
-                <span className="sm:hidden">Travel Expert</span>
-                <span className="hidden sm:inline">Travel Expert Consultation</span>
+                <span className="sm:hidden">Book an Appointment</span>
+                <span className="hidden sm:inline">Need booking assistance? Book an Appointment</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('https://support.expeditionamerica.us/', '_blank', 'noopener,noreferrer')}
+                data-testid="button-agent-support"
+                className="flex items-center gap-1.5"
+              >
+                Agent Support
               </Button>
               <Button
                 size="sm"

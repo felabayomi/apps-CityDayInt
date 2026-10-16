@@ -180,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }).format(new Date())
       );
 
-      if (easternHour !== 15) {
+      if (easternHour !== 15 && easternHour !== 16) {
         console.log(
           `[Cron] generate-tomorrow skipped because Eastern hour is ${easternHour}, not 15`
         );
@@ -213,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }).format(new Date())
       );
 
-      if (easternHour !== 9) {
+      if (easternHour !== 9 && easternHour !== 10) {
         console.log(
           `[Cron] auto-publish skipped because Eastern hour is ${easternHour}, not 9`
         );
